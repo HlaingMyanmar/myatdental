@@ -80,6 +80,9 @@ public class UserService {
 
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
+        if(dto.getPassword_hash()!=null){
+            user.setPassword(passwordEncoder.encode(dto.getPassword_hash()));
+        }
         user.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : user.getIsActive());
         user.setAuthProvider(dto.getAuthProvider() != null ? dto.getAuthProvider() : user.getAuthProvider());
 
