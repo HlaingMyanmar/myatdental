@@ -24,18 +24,31 @@ public class JwtService {
     @Value("${application.security.jwt.expiration}")
     private long jwtExpiration;
 
+
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("roles", userDetails.getAuthorities());
+        return buildToken(extraClaims, userDetails, jwtExpiration);
+    }
 
+
+    public String generateRefreshToken(UserDetails userDetails) {
+
+        long refreshExpiration = 7 * 24 * 60 * 60 * 1000;
+        return buildToken(new HashMap<>(), userDetails, refreshExpiration);
+    }
+
+    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
         return Jwts.builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
+    // --- အောက်က Extract Claims logic တွေက အရင်အတိုင်းပဲ ထားပါ ---
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);

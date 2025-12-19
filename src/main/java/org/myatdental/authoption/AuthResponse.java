@@ -2,7 +2,12 @@ package org.myatdental.authoption;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
-class AuthResponse { private String token; private String username; }
+@NoArgsConstructor
+class AuthResponse {
+    private String accessToken;
+    private String username;
+}
