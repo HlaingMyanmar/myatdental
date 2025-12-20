@@ -42,8 +42,8 @@ public class TreatmentService {
             throw new RuntimeException("Treatment code already exists: " + dto.getCode());
         }
 
-        TreatmentCategories category = categoriesRepository.findById(dto.getCategory_id())
-                .orElseThrow(() -> new RuntimeException("Category not found with id: " + dto.getCategory_id()));
+        TreatmentCategories category = categoriesRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found with id: " + dto.getCategoryId()));
 
         Treatments treatment = convertToEntity(dto, category);
         Treatments savedTreatment = treatmentsRepository.save(treatment);
@@ -59,12 +59,12 @@ public class TreatmentService {
             throw new RuntimeException("Treatment code already exists: " + dto.getCode());
         }
 
-        TreatmentCategories category = categoriesRepository.findById(dto.getCategory_id())
-                .orElseThrow(() -> new RuntimeException("Category not found with id: " + dto.getCategory_id()));
+        TreatmentCategories category = categoriesRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found with id: " + dto.getCategoryId()));
 
         treatment.setCode(dto.getCode());
         treatment.setDescription(dto.getDescription());
-        treatment.setStandard_price(dto.getStandard_price());
+        treatment.setStandardPrice(dto.getStandardPrice());
         treatment.setCategory(category);
         treatment.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : treatment.getIsActive());
 
@@ -82,11 +82,11 @@ public class TreatmentService {
 
     private TreatmentDTO convertToDTO(Treatments treatment) {
         TreatmentDTO dto = new TreatmentDTO();
-        dto.setTreatment_id(treatment.getTreatment_id());
+        dto.setTreatmentId(treatment.getTreatmentId());
         dto.setCode(treatment.getCode());
         dto.setDescription(treatment.getDescription());
-        dto.setStandard_price(treatment.getStandard_price());
-        dto.setCategory_id(treatment.getCategory().getCategory_id());
+        dto.setStandardPrice(treatment.getStandardPrice());
+        dto.setCategoryId(treatment.getCategory().getCategory_id());
         dto.setIsActive(treatment.getIsActive());
         return dto;
     }
@@ -95,7 +95,7 @@ public class TreatmentService {
         Treatments treatment = new Treatments();
         treatment.setCode(dto.getCode());
         treatment.setDescription(dto.getDescription());
-        treatment.setStandard_price(dto.getStandard_price());
+        treatment.setStandardPrice(dto.getStandardPrice());
         treatment.setCategory(category);
         treatment.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
         return treatment;

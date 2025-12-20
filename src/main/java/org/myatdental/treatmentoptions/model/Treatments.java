@@ -20,7 +20,7 @@ public class Treatments {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "treatment_id")
-    private Integer treatment_id;
+    private Integer treatmentId;
 
     @Column(name = "code", length = 10, nullable = false, unique = true)
     private String code;
@@ -29,7 +29,7 @@ public class Treatments {
     private String description;
 
     @Column(name = "standard_price", precision = 12, scale = 2, nullable = false)
-    private BigDecimal standard_price;
+    private BigDecimal standardPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false, foreignKey = @ForeignKey(name = "FK_treatment_category"))

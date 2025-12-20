@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 @Data
 public class TreatmentDTO {
 
-    private Integer treatment_id;
+    private Integer treatmentId;
 
     @NotBlank(message = "Treatment code is required")
     @Size(max = 10, message = "Code must not exceed 10 characters")
@@ -19,10 +19,10 @@ public class TreatmentDTO {
 
     @NotNull(message = "Standard price is required")
     @DecimalMin(value = "0.0", inclusive = true, message = "Price must be positive")
-    private BigDecimal standard_price;
+    private BigDecimal standardPrice;
 
     @NotNull(message = "Category is required")
-    private Integer category_id;  // This will hold the ID of TreatmentCategory
+    private Integer categoryId;
 
     private Boolean isActive = true;
 }
