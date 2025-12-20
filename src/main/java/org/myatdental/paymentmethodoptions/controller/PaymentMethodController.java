@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/payment_methods")
+@RequestMapping("/api/payment-methods")
 @RequiredArgsConstructor
 public class PaymentMethodController {
 

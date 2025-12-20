@@ -8,7 +8,6 @@ import lombok.Data;
 public class PaymentMethodDTO {
 
     private Integer id;
-
     @NotBlank(message = "Payment method name is required")
     @Size(max = 50, message = "Name must not exceed 50 characters")
     private String name;
