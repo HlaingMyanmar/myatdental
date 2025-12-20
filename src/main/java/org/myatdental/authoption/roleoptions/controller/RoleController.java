@@ -1,5 +1,6 @@
 package org.myatdental.authoption.roleoptions.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.myatdental.authoption.roleoptions.dto.RoleDTO;
 import org.myatdental.authoption.roleoptions.service.RoleService;
@@ -24,7 +25,7 @@ public class RoleController {
         return ResponseEntity.ok(roleService.getRoleById(id));
     }
     @PostMapping
-    public ResponseEntity<RoleDTO> createRole(@RequestBody RoleDTO roleDTO) {
+    public ResponseEntity<RoleDTO> createRole( @RequestBody RoleDTO roleDTO) {
         return ResponseEntity.ok(roleService.createRole(roleDTO));
     }
     @DeleteMapping("/{id}")
