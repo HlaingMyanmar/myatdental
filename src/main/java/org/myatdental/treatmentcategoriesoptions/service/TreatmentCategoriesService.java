@@ -66,7 +66,7 @@ public class TreatmentCategoriesService {
 
     private TreatmentCategoriesDTO convertToDTO(TreatmentCategories category) {
         TreatmentCategoriesDTO dto = new TreatmentCategoriesDTO();
-        dto.setCategory_id(category.getCategory_id());
+        dto.setCategoryId(category.getCategory_id());
         dto.setName(category.getName());
         return dto;
     }
