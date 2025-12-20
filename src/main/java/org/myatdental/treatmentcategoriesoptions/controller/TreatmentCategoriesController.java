@@ -1,5 +1,6 @@
 package org.myatdental.treatmentcategoriesoptions.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.myatdental.treatmentcategoriesoptions.dto.TreatmentCategoriesDTO;
 import org.myatdental.treatmentcategoriesoptions.service.TreatmentCategoriesService;
@@ -9,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/treatment_categories")
+@RequestMapping("/api/treatment-categories")
 @RequiredArgsConstructor
 public class TreatmentCategoriesController {
 
@@ -26,7 +27,7 @@ public class TreatmentCategoriesController {
     }
 
     @PostMapping
-    public ResponseEntity<TreatmentCategoriesDTO> createCategory(@RequestBody TreatmentCategoriesDTO dto) {
+    public ResponseEntity<TreatmentCategoriesDTO> createCategory(@Valid @RequestBody TreatmentCategoriesDTO dto) {
         return ResponseEntity.ok(treatmentCategoriesService.createCategory(dto));
     }
 
