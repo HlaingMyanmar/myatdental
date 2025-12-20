@@ -1,6 +1,8 @@
-package org.myatdental.roomoptions;
+package org.myatdental.roomoptions.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.myatdental.roomoptions.service.RoomService;
+import org.myatdental.roomoptions.dto.RoomDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

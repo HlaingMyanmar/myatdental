@@ -6,8 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.myatdental.roomoptions.Room;
+import org.myatdental.roomoptions.model.Room;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -32,5 +33,18 @@ public class RoomType {
 
     @OneToMany(mappedBy = "roomType", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Room> rooms;
+
+    public void addRoom(Room room) {
+        if (rooms == null) {
+            rooms = new ArrayList<>();
+        }
+        rooms.add(room);
+        room.setRoomType(this);
+    }
+
+    public void removeRoom(Room room) {
+        rooms.remove(room);
+        room.setRoomType(null);
+    }
 }
 

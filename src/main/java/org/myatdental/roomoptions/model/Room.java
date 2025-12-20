@@ -1,4 +1,4 @@
-package org.myatdental.roomoptions;
+package org.myatdental.roomoptions.model;
 
 
 import jakarta.persistence.*;

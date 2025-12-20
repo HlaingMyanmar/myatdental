@@ -1,5 +1,8 @@
 package org.myatdental.roomtypeoption.service;
 import lombok.RequiredArgsConstructor;
+import org.myatdental.roomoptions.dto.RoomDTO;
+import org.myatdental.roomoptions.model.Room;
+import org.myatdental.roomoptions.repository.RoomRepository;
 import org.myatdental.roomtypeoption.dto.RoomTypeDTO;
 import org.myatdental.roomtypeoption.model.RoomType;
 import org.myatdental.roomtypeoption.respostory.RoomTypeRepository;
@@ -14,6 +17,7 @@ import java.util.stream.Collectors;
 public class RoomTypeService {
 
     private final RoomTypeRepository roomTypeRepository;
+    private final RoomRepository roomRepository;
 
     // 🔹 Get All
     @Transactional(readOnly = true)
@@ -89,6 +93,32 @@ public class RoomTypeService {
         roomType.setName(dto.getName());
         roomType.setDescription(dto.getDescription());
         return roomType;
+    }
+    @Transactional(readOnly = true)
+    public List<RoomDTO> getRoomsByRoomTypeId(Integer typeId) {
+        // ၁။ Room Type ရှိမရှိ အရင်စစ်မယ်
+        if (!roomTypeRepository.existsById(typeId)) {
+            throw new RuntimeException("Room Type not found with id: " + typeId);
+        }
+
+
+        List<Room> rooms = roomRepository.findAllByRoomType_Id(typeId);
+
+        // ၃။ Entity list ကို DTO list ပြောင်းပြီး ပြန်ပေးမယ်
+        return rooms.stream()
+                .map(this::convertToRoomDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Helper method: Room Entity to RoomDTO
+    private RoomDTO convertToRoomDTO(Room room) {
+        RoomDTO dto = new RoomDTO();
+        dto.setRoomId(room.getRoomId());
+        dto.setRoomName(room.getRoomName());
+        dto.setTypeId(room.getRoomType().getId());
+        dto.setIsActive(room.getIsActive());
+        dto.setNotes(room.getNotes());
+        return dto;
     }
 }
 

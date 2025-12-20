@@ -1,4 +1,4 @@
-package org.myatdental.roomoptions;
+package org.myatdental.roomoptions.dto;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -12,7 +12,7 @@ public class RoomDTO {
     private String roomName;
 
     @NotNull(message = "Room type is required")
-    private Integer typeId; // RoomType ID ကို foreign key အနေနဲ့သုံးမယ်
+    private Integer typeId;
 
     private Boolean isActive = true;
 

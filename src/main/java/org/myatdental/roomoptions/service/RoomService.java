@@ -1,5 +1,8 @@
-package org.myatdental.roomoptions;
+package org.myatdental.roomoptions.service;
 import lombok.RequiredArgsConstructor;
+import org.myatdental.roomoptions.dto.RoomDTO;
+import org.myatdental.roomoptions.model.Room;
+import org.myatdental.roomoptions.repository.RoomRepository;
 import org.myatdental.roomtypeoption.model.RoomType;
 import org.myatdental.roomtypeoption.respostory.RoomTypeRepository;
 import org.springframework.stereotype.Service;
