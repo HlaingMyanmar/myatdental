@@ -22,6 +22,13 @@ public class TreatmentPlanService {
     private final TreatmentPlanRepository planRepository;
     private final TreatmentsRepository treatmentRepository;
 
+    @Transactional(readOnly = true)
+    public List<TreatmentPlanDTO> getAllPlans() {
+        return planRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
 
     @Transactional
     public TreatmentPlanDTO createPlan(TreatmentPlanDTO dto) {
@@ -73,12 +80,42 @@ public class TreatmentPlanService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<TreatmentPlanDTO> getPatientPlans() {
+        // is_template = false ဖြစ်တဲ့ data တွေကိုပဲ ယူမယ်
+        return planRepository.findAllByIsTemplateFalse().stream()
+                .map(this::convertToDTO) // Entity to DTO conversion logic
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public void deletePlan(Integer id) {
         if (!planRepository.existsById(id)) {
             throw new RuntimeException("Plan not found");
         }
         planRepository.deleteById(id);
+    }
+    @Transactional
+    public TreatmentPlanDTO cloneTemplateToPatient(Integer templateId) {
+
+        TreatmentPlan template = planRepository.findById(templateId)
+                .orElseThrow(() -> new RuntimeException("Template not found"));
+        TreatmentPlan newPlan = new TreatmentPlan();
+        newPlan.setName(template.getName() + " - Copy");
+        newPlan.setCode("CL-" + System.currentTimeMillis() / 1000);
+        newPlan.setIsTemplate(false);
+        newPlan.setInstallmentsAllowed(template.getInstallmentsAllowed());
+        newPlan.setTotalCost(template.getTotalCost());
+
+        for (TreatmentPlanItem templateItem : template.getItems()) {
+            TreatmentPlanItem newItem = new TreatmentPlanItem();
+            newItem.setPlan(newPlan);
+            newItem.setTreatment(templateItem.getTreatment());
+            newItem.setEstimatedPrice(templateItem.getEstimatedPrice());
+            newPlan.getItems().add(newItem);
+        }
+
+        return convertToDTO(planRepository.save(newPlan));
     }
     private TreatmentPlanDTO convertToDTO(TreatmentPlan plan) {
         TreatmentPlanDTO dto = new TreatmentPlanDTO();
@@ -104,39 +141,32 @@ public class TreatmentPlanService {
     }
     @Transactional
     public TreatmentPlanDTO updatePlan(Integer id, TreatmentPlanDTO dto) {
+
         TreatmentPlan plan = planRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Treatment Plan not found with id: " + id));
-
-
-        if (!plan.getCode().equals(dto.getCode()) && planRepository.existsByCode(dto.getCode())) {
-            throw new RuntimeException("Plan code already exists: " + dto.getCode());
-        }
-
-
+                .orElseThrow(() -> new RuntimeException("Plan not found"));
         plan.setName(dto.getName());
         plan.setCode(dto.getCode());
         plan.setIsTemplate(dto.getIsTemplate());
         plan.setInstallmentsAllowed(dto.getInstallmentsAllowed());
         plan.setIsActive(dto.getIsActive());
-
         plan.getItems().clear();
+        planRepository.saveAndFlush(plan);
         BigDecimal total = BigDecimal.ZERO;
-
         if (dto.getItems() != null) {
             for (var itemDto : dto.getItems()) {
                 Treatments treatment = treatmentRepository.findById(itemDto.getTreatmentId())
                         .orElseThrow(() -> new RuntimeException("Treatment not found"));
 
-                TreatmentPlanItem item = new TreatmentPlanItem();
-                item.setPlan(plan);
-                item.setTreatment(treatment);
-                item.setEstimatedPrice(itemDto.getEstimatedPrice());
-
-                plan.getItems().add(item);
+                TreatmentPlanItem newItem = new TreatmentPlanItem();
+                newItem.setTreatment(treatment);
+                newItem.setEstimatedPrice(itemDto.getEstimatedPrice());
+                newItem.setPlan(plan);
+                plan.getItems().add(newItem);
                 total = total.add(itemDto.getEstimatedPrice());
             }
         }
         plan.setTotalCost(total);
-        return convertToDTO(planRepository.save(plan));
+        TreatmentPlan updatedPlan = planRepository.save(plan);
+        return convertToDTO(updatedPlan);
     }
 }

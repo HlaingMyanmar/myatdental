@@ -13,9 +13,13 @@ public interface TreatmentPlanRepository extends JpaRepository<TreatmentPlan, In
 
     List<TreatmentPlan> findByIsTemplateTrue();
 
+    List<TreatmentPlan> findAllByIsTemplateFalse();
+
 
     boolean existsByCode(String code);
-
+    List<TreatmentPlan> findByIsTemplateFalse();
 
     Optional<TreatmentPlan> findByCode(String code);
+
+
 }

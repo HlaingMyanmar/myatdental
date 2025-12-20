@@ -17,6 +17,28 @@ public class TreatmentPlanController {
 
     private final TreatmentPlanService planService;
 
+    @GetMapping
+    public ResponseEntity<List<TreatmentPlanDTO>> getAllPlans() {
+        return ResponseEntity.ok(planService.getAllPlans());
+    }
+
+    @PostMapping("/{templateId}/clone-to-patient")
+    public ResponseEntity<TreatmentPlanDTO> cloneTemplateToPatient(@PathVariable Integer templateId) {
+        TreatmentPlanDTO clonedPlan = planService.cloneTemplateToPatient(templateId);
+        return new ResponseEntity<>(clonedPlan, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/templates")
+    public ResponseEntity<List<TreatmentPlanDTO>> getTemplates() {
+        return ResponseEntity.ok(planService.getTemplates());
+    }
+
+    @GetMapping("/patient-plans")
+    public ResponseEntity<List<TreatmentPlanDTO>> getPatientPlans() {
+        // Template မဟုတ်တဲ့ list တွေကိုပဲ ပြန်ပေးပါမယ်
+        List<TreatmentPlanDTO> patientPlans = planService.getPatientPlans();
+        return ResponseEntity.ok(patientPlans);
+    }
 
     @PostMapping
     public ResponseEntity<TreatmentPlanDTO> createPlan(@Valid @RequestBody TreatmentPlanDTO dto) {
@@ -31,10 +53,7 @@ public class TreatmentPlanController {
     }
 
 
-    @GetMapping("/templates")
-    public ResponseEntity<List<TreatmentPlanDTO>> getTemplates() {
-        return ResponseEntity.ok(planService.getTemplates());
-    }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<TreatmentPlanDTO> updatePlan(
