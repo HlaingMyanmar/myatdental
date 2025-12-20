@@ -30,5 +30,5 @@ public class AdditionalCharges {
     private BigDecimal defaultPrice;
 
     @Column(name = "is_active")
-    private Boolean is_active = true;
+    private Boolean isActive = true;
 }

@@ -26,7 +26,7 @@ public class AdditionalChargesService {
 
     @Transactional(readOnly = true)
     public AdditionalChargesDTO getChargeById(Integer id) {
-        AdditionalCharges charge = additionalChargesRepository.findById(id)
+        AdditionalCharges charge = additionalChargesRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new RuntimeException("Charge not found with id: " + id));
         return convertToDTO(charge);
     }
@@ -47,7 +47,7 @@ public class AdditionalChargesService {
 
     @Transactional
     public AdditionalChargesDTO updateCharge(Integer id, AdditionalChargesDTO dto) {
-        AdditionalCharges charge = additionalChargesRepository.findById(id)
+        AdditionalCharges charge = additionalChargesRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new RuntimeException("Charge not found with id: " + id));
 
 
@@ -59,25 +59,25 @@ public class AdditionalChargesService {
         charge.setName(dto.getName());
         charge.setDescription(dto.getDescription());
         charge.setDefaultPrice(dto.getDefaultPrice() != null ? dto.getDefaultPrice() : charge.getDefaultPrice());
-        charge.setIs_active(dto.getIsActive() != null ? dto.getIsActive() : charge.getIs_active());
+        charge.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : charge.getIsActive());
 
         return convertToDTO(additionalChargesRepository.save(charge));
     }
 
     @Transactional
     public void deleteCharge(Integer id) {
-        if (!additionalChargesRepository.existsById(id)) {
+        if (!additionalChargesRepository.existsById(Long.valueOf(id))) {
             throw new RuntimeException("Charge not found with id: " + id);
         }
-        additionalChargesRepository.deleteById(id);
+        additionalChargesRepository.deleteById(Long.valueOf(id));
     }
 
     @Transactional
     public AdditionalChargesDTO toggleChargeStatus(Integer id) {
-        AdditionalCharges charge = additionalChargesRepository.findById(id)
+        AdditionalCharges charge = additionalChargesRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new RuntimeException("Charge not found with id: " + id));
 
-        charge.setIs_active(!charge.getIs_active());
+        charge.setIsActive(!charge.getIsActive());
         return convertToDTO(additionalChargesRepository.save(charge));
     }
 
@@ -89,7 +89,7 @@ public class AdditionalChargesService {
         dto.setName(charge.getName());
         dto.setDescription(charge.getDescription());
         dto.setDefaultPrice(charge.getDefaultPrice());
-        dto.setIsActive(charge.getIs_active());
+        dto.setIsActive(charge.getIsActive());
         return dto;
     }
 
@@ -99,7 +99,7 @@ public class AdditionalChargesService {
         charge.setDescription(dto.getDescription());
         // Default values များ သတ်မှတ်ခြင်း
         charge.setDefaultPrice(dto.getDefaultPrice() != null ? dto.getDefaultPrice() : BigDecimal.ZERO);
-        charge.setIs_active(dto.getIsActive() != null ? dto.getIsActive() : true);
+        charge.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
         return charge;
     }
 }

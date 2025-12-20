@@ -7,14 +7,14 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface AdditionalChargesRepository extends JpaRepository<AdditionalCharges, Integer> {
+public interface AdditionalChargesRepository extends JpaRepository<AdditionalCharges, Long> {
 
 
     Optional<AdditionalCharges> findByName(String name);
 
     boolean existsByName(String name);
 
-    Optional<AdditionalCharges> findByIs_activeTrue();
+    Optional<AdditionalCharges> findByIsActiveTrue();
 
-    boolean existsByNameAndIs_activeTrue(String name);
+    boolean existsByNameAndIsActiveTrue(String name);
 }
