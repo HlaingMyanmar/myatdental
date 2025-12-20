@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.myatdental.treatmentcategoriesoptions.dto.TreatmentCategoriesDTO;
 import org.myatdental.treatmentcategoriesoptions.service.TreatmentCategoriesService;
+import org.myatdental.treatmentoptions.dto.TreatmentDTO;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +17,7 @@ import java.util.List;
 public class TreatmentCategoriesController {
 
     private final TreatmentCategoriesService treatmentCategoriesService;
+
 
     @GetMapping
     public ResponseEntity<List<TreatmentCategoriesDTO>> getAllCategories() {
@@ -42,6 +45,27 @@ public class TreatmentCategoriesController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCategory(@PathVariable Integer id) {
         treatmentCategoriesService.deleteCategory(id);
+        return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/{id}/treatments")
+    public ResponseEntity<List<TreatmentDTO>> getTreatmentsByCategory(@PathVariable Integer id) {
+        return ResponseEntity.ok(treatmentCategoriesService.getTreatmentsByCategoryId(id));
+    }
+
+    @PostMapping("/{categoryId}/treatments")
+    public ResponseEntity<TreatmentDTO> assignTreatment(
+            @PathVariable Integer categoryId,
+            @Valid @RequestBody TreatmentDTO treatmentDto) {
+
+        TreatmentDTO createdTreatment = treatmentCategoriesService.assignTreatmentToCategory(categoryId, treatmentDto);
+        return new ResponseEntity<>(createdTreatment, HttpStatus.CREATED);
+    }
+    @DeleteMapping("/{categoryId}/treatments/{treatmentId}")
+    public ResponseEntity<Void> removeTreatment(
+            @PathVariable Integer categoryId,
+            @PathVariable Integer treatmentId) {
+
+        treatmentCategoriesService.removeTreatmentFromCategory(categoryId, treatmentId);
         return ResponseEntity.noContent().build();
     }
 }

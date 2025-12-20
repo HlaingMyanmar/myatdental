@@ -8,7 +8,6 @@ import lombok.Setter;
 import org.myatdental.treatmentcategoriesoptions.model.TreatmentCategories;
 
 import java.math.BigDecimal;
-
 @Entity
 @Table(name = "treatments")
 @Getter
@@ -32,10 +31,10 @@ public class Treatments {
     private BigDecimal standardPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false, foreignKey = @ForeignKey(name = "FK_treatment_category"))
+    @JoinColumn(name = "category_id", nullable = false)
     private TreatmentCategories category;
 
-    @Column(name = "is_active")
+    @Column(name = "isActive")
     private Boolean isActive = true;
 }
 

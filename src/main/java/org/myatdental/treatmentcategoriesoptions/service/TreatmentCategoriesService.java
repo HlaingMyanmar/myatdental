@@ -4,6 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.myatdental.treatmentcategoriesoptions.dto.TreatmentCategoriesDTO;
 import org.myatdental.treatmentcategoriesoptions.model.TreatmentCategories;
 import org.myatdental.treatmentcategoriesoptions.repository.TreatmentCategoriesRepository;
+import org.myatdental.treatmentoptions.dto.TreatmentDTO;
+import org.myatdental.treatmentoptions.model.Treatments;
+import org.myatdental.treatmentoptions.repository.TreatmentsRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +18,7 @@ import java.util.stream.Collectors;
 public class TreatmentCategoriesService {
 
     private final TreatmentCategoriesRepository treatmentCategoriesRepository;
+    private final TreatmentsRepository treatmentRepository;
 
     @Transactional(readOnly = true)
     public List<TreatmentCategoriesDTO> getAllCategories() {
@@ -64,9 +68,20 @@ public class TreatmentCategoriesService {
         treatmentCategoriesRepository.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
+    public List<TreatmentDTO> getTreatmentsByCategoryId(Integer categoryId) {
+        if (!treatmentCategoriesRepository.existsById(categoryId)) {
+            throw new RuntimeException("Category not found with id: " + categoryId);
+        }
+        List<Treatments> treatments = treatmentRepository.findAllByCategoryCategoryId(categoryId);
+        return treatments.stream()
+                .map(this::convertToTreatmentDTO)
+                .collect(Collectors.toList());
+    }
+
     private TreatmentCategoriesDTO convertToDTO(TreatmentCategories category) {
         TreatmentCategoriesDTO dto = new TreatmentCategoriesDTO();
-        dto.setCategoryId(category.getCategory_id());
+        dto.setCategoryId(category.getCategoryId());
         dto.setName(category.getName());
         return dto;
     }
@@ -75,5 +90,42 @@ public class TreatmentCategoriesService {
         TreatmentCategories category = new TreatmentCategories();
         category.setName(dto.getName());
         return category;
+    }
+    private TreatmentDTO convertToTreatmentDTO(Treatments treatment) {
+        TreatmentDTO dto = new TreatmentDTO();
+        dto.setTreatmentId(treatment.getTreatmentId());
+        dto.setCode(treatment.getCode());
+        dto.setDescription(treatment.getDescription());
+        dto.setStandardPrice(treatment.getStandardPrice());
+        dto.setCategoryId(treatment.getCategory().getCategoryId());
+        dto.setIsActive(treatment.getIsActive());
+        return dto;
+    }
+
+    @Transactional
+    public TreatmentDTO assignTreatmentToCategory(Integer categoryId, TreatmentDTO treatmentDto) {
+
+        TreatmentCategories category = treatmentCategoriesRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        Treatments treatment = new Treatments();
+        treatment.setCode(treatmentDto.getCode());
+        treatment.setDescription(treatmentDto.getDescription());
+        treatment.setStandardPrice(treatmentDto.getStandardPrice());
+        treatment.setIsActive(true);
+        category.addTreatment(treatment);
+        treatmentCategoriesRepository.save(category);
+        return convertToTreatmentDTO(treatment);
+    }
+    @Transactional
+    public void removeTreatmentFromCategory(Integer categoryId, Integer treatmentId) {
+        TreatmentCategories category =  treatmentCategoriesRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+        Treatments treatment = category.getTreatments().stream()
+                .filter(t -> t.getTreatmentId().equals(treatmentId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Treatment not found in this category"));
+        category.removeTreatment(treatment);
+        treatmentCategoriesRepository.save(category);
     }
 }

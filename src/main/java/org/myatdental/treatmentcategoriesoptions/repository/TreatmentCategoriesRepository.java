@@ -12,5 +12,7 @@ public interface TreatmentCategoriesRepository extends JpaRepository<TreatmentCa
     Optional<TreatmentCategories> findByName(String name);
 
     boolean existsByName(String name);
+
+
 }
 

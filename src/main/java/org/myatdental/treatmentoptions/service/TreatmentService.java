@@ -86,7 +86,7 @@ public class TreatmentService {
         dto.setCode(treatment.getCode());
         dto.setDescription(treatment.getDescription());
         dto.setStandardPrice(treatment.getStandardPrice());
-        dto.setCategoryId(treatment.getCategory().getCategory_id());
+        dto.setCategoryId(treatment.getCategory().getCategoryId());
         dto.setIsActive(treatment.getIsActive());
         return dto;
     }
