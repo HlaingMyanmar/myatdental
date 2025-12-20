@@ -34,10 +34,13 @@ public class AdditionalChargesService {
     @Transactional
     public AdditionalChargesDTO createCharge(AdditionalChargesDTO dto) {
         if (additionalChargesRepository.existsByName(dto.getName())) {
-            throw new RuntimeException("Charge name already exists: " + dto.getName());
+            throw new RuntimeException("Charge name '" + dto.getName() + "' already exists.");
         }
 
         AdditionalCharges charge = convertToEntity(dto);
+
+        charge.setChargeId(null);
+
         AdditionalCharges savedCharge = additionalChargesRepository.save(charge);
         return convertToDTO(savedCharge);
     }
@@ -47,17 +50,18 @@ public class AdditionalChargesService {
         AdditionalCharges charge = additionalChargesRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Charge not found with id: " + id));
 
-        if (!charge.getName().equals(dto.getName()) && additionalChargesRepository.existsByName(dto.getName())) {
-            throw new RuntimeException("Charge name already exists: " + dto.getName());
+
+        if (!charge.getName().equalsIgnoreCase(dto.getName()) &&
+                additionalChargesRepository.existsByName(dto.getName())) {
+            throw new RuntimeException("Charge name '" + dto.getName() + "' already exists.");
         }
 
         charge.setName(dto.getName());
         charge.setDescription(dto.getDescription());
-        charge.setDefault_price(dto.getDefault_price() != null ? dto.getDefault_price() : charge.getDefault_price());
-        charge.setIs_active(dto.getIs_active() != null ? dto.getIs_active() : charge.getIs_active());
+        charge.setDefaultPrice(dto.getDefaultPrice() != null ? dto.getDefaultPrice() : charge.getDefaultPrice());
+        charge.setIs_active(dto.getIsActive() != null ? dto.getIsActive() : charge.getIs_active());
 
-        AdditionalCharges updatedCharge = additionalChargesRepository.save(charge);
-        return convertToDTO(updatedCharge);
+        return convertToDTO(additionalChargesRepository.save(charge));
     }
 
     @Transactional
@@ -77,13 +81,15 @@ public class AdditionalChargesService {
         return convertToDTO(additionalChargesRepository.save(charge));
     }
 
+    // --- Helper Methods ---
+
     private AdditionalChargesDTO convertToDTO(AdditionalCharges charge) {
         AdditionalChargesDTO dto = new AdditionalChargesDTO();
-        dto.setCharge_id(charge.getCharge_id());
+        dto.setChargeId(charge.getChargeId());
         dto.setName(charge.getName());
         dto.setDescription(charge.getDescription());
-        dto.setDefault_price(charge.getDefault_price());
-        dto.setIs_active(charge.getIs_active());
+        dto.setDefaultPrice(charge.getDefaultPrice());
+        dto.setIsActive(charge.getIs_active());
         return dto;
     }
 
@@ -91,8 +97,9 @@ public class AdditionalChargesService {
         AdditionalCharges charge = new AdditionalCharges();
         charge.setName(dto.getName());
         charge.setDescription(dto.getDescription());
-        charge.setDefault_price(dto.getDefault_price() != null ? dto.getDefault_price() : BigDecimal.ZERO);
-        charge.setIs_active(dto.getIs_active() != null ? dto.getIs_active() : true);
+        // Default values များ သတ်မှတ်ခြင်း
+        charge.setDefaultPrice(dto.getDefaultPrice() != null ? dto.getDefaultPrice() : BigDecimal.ZERO);
+        charge.setIs_active(dto.getIsActive() != null ? dto.getIsActive() : true);
         return charge;
     }
 }

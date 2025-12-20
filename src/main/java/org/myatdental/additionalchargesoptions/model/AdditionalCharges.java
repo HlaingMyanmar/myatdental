@@ -18,7 +18,7 @@ public class AdditionalCharges {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "charge_id")
-    private Integer charge_id;
+    private Integer chargeId;
 
     @Column(name = "name", length = 50, nullable = false, unique = true)
     private String name;
@@ -27,7 +27,7 @@ public class AdditionalCharges {
     private String description;
 
     @Column(name = "default_price", precision = 12, scale = 2)
-    private BigDecimal default_price;
+    private BigDecimal defaultPrice;
 
     @Column(name = "is_active")
     private Boolean is_active = true;
