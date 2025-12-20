@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.myatdental.roomoptions.Room;
+
+import java.util.List;
 
 @Entity
 @Table(name = "room_types")
@@ -25,5 +28,9 @@ public class RoomType {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+
+    @OneToMany(mappedBy = "roomType", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Room> rooms;
 }
 
