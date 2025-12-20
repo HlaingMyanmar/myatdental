@@ -108,7 +108,6 @@ public class DentistService {
         dto.setEmail(dentist.getEmail());
         dto.setIsActive(dentist.getIsActive());
         dto.setJoinDate(dentist.getJoinDate());
-        dto.setCreatedAt(dentist.getCreatedAt());
         return dto;
     }
 

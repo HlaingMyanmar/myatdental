@@ -1,5 +1,6 @@
 package org.myatdental.dentistoptions.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.myatdental.dentistoptions.dto.DentistDTO;
 import org.myatdental.dentistoptions.service.DentistService;
@@ -29,7 +30,7 @@ public class DentistController {
 
 
     @PostMapping
-    public ResponseEntity<DentistDTO> createDentist(@RequestBody DentistDTO dto) {
+    public ResponseEntity<DentistDTO> createDentist(@Valid @RequestBody DentistDTO dto) {
         return ResponseEntity.ok(dentistService.createDentist(dto));
     }
 

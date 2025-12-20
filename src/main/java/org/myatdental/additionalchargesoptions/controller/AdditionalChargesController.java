@@ -1,42 +1,50 @@
 package org.myatdental.additionalchargesoptions.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.myatdental.additionalchargesoptions.dto.AdditionalChargesDTO;
 import org.myatdental.additionalchargesoptions.service.AdditionalChargesService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/charges")
+@RequestMapping("/api/additional-charges")
 @RequiredArgsConstructor
 public class AdditionalChargesController {
 
     private final AdditionalChargesService additionalChargesService;
+
 
     @GetMapping
     public ResponseEntity<List<AdditionalChargesDTO>> getAllCharges() {
         return ResponseEntity.ok(additionalChargesService.getAllCharges());
     }
 
+
     @GetMapping("/{id}")
     public ResponseEntity<AdditionalChargesDTO> getChargeById(@PathVariable Integer id) {
         return ResponseEntity.ok(additionalChargesService.getChargeById(id));
     }
 
+
     @PostMapping
-    public ResponseEntity<AdditionalChargesDTO> createCharge(@RequestBody AdditionalChargesDTO dto) {
-        return ResponseEntity.ok(additionalChargesService.createCharge(dto));
+    public ResponseEntity<AdditionalChargesDTO> createCharge(@Valid @RequestBody AdditionalChargesDTO dto) {
+        AdditionalChargesDTO createdCharge = additionalChargesService.createCharge(dto);
+        return new ResponseEntity<>(createdCharge, HttpStatus.CREATED);
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<AdditionalChargesDTO> updateCharge(
             @PathVariable Integer id,
-            @RequestBody AdditionalChargesDTO dto
+            @Valid @RequestBody AdditionalChargesDTO dto
     ) {
         return ResponseEntity.ok(additionalChargesService.updateCharge(id, dto));
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCharge(@PathVariable Integer id) {
@@ -44,7 +52,8 @@ public class AdditionalChargesController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{id}/toggle-status")
+
+    @PatchMapping("/{id}/toggle")
     public ResponseEntity<AdditionalChargesDTO> toggleChargeStatus(@PathVariable Integer id) {
         return ResponseEntity.ok(additionalChargesService.toggleChargeStatus(id));
     }

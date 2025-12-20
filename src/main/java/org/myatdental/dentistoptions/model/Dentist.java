@@ -37,14 +37,12 @@ public class Dentist {
     @Column(length = 100)
     private String email;
 
-    @Column(name = "is_Active")
+    @Column(name = "is_active")
     private Boolean isActive = true;
 
-    @Column(name = "joinDate")
+    @Column(name = "join_date")
     private LocalDate joinDate;
 
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
@@ -52,6 +50,6 @@ public class Dentist {
         if (this.joinDate == null) {
             this.joinDate = LocalDate.now();
         }
-        this.createdAt = LocalDateTime.now();
+
     }
 }
