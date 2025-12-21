@@ -13,21 +13,19 @@ import java.util.List;
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Integer> {
 
-    // အဲဒီနေ့အတွက် အမြင့်ဆုံး Token နံပါတ်ကို ရှာရန်
     @Query("SELECT MAX(a.tokenNumber) FROM Appointment a WHERE a.appointmentDate = :date")
     Integer findMaxTokenByDate(@Param("date") LocalDate date);
 
-    // လူနာအလိုက် ရက်ချိန်းများ ပြန်ရှာရန်
     List<Appointment> findByPatientId(Integer patientId);
 
-    // နေ့စဉ် ရက်ချိန်းစာရင်းကို Token အစီအစဉ်အတိုင်း ပြရန်
     List<Appointment> findByAppointmentDateOrderByTokenNumberAsc(LocalDate date);
 
-    // ဆရာဝန် အချိန်ထပ်/မထပ် စစ်ဆေးရန် (Update အတွက် မိမိ ID ကို ချန်လှပ်ထားနိုင်သည်)
-    @Query("SELECT COUNT(a) > 0 FROM Appointment a WHERE a.dentist.id = :dentistId " +
-            "AND a.appointmentDate = :date AND a.status NOT IN (org.myatdental.appointmentoptions.status.AppointmentStatus.Cancelled) " +
-            "AND (:currentId IS NULL OR a.id != :currentId) " +
-            "AND ((a.appointmentTime < :endTime) AND (ADDTIME(a.appointmentTime, SEC_TO_TIME(a.durationMinutes * 60)) > :startTime))")
+    // Native Query သုံး၍ ဆရာဝန် အချိန်ထပ်မထပ်စစ်ခြင်း
+    @Query(value = "SELECT COUNT(*) > 0 FROM appointments a WHERE a.dentist_id = :dentistId " +
+            "AND a.appointment_date = :date AND a.status NOT IN ('Cancelled') " +
+            "AND (:currentId IS NULL OR a.appointment_id != :currentId) " +
+            "AND ((a.appointment_time < :endTime) AND (ADDTIME(a.appointment_time, SEC_TO_TIME(a.duration_minutes * 60)) > :startTime))",
+            nativeQuery = true)
     boolean existsOverlappingDentistAppt(
             @Param("dentistId") Integer dentistId,
             @Param("date") LocalDate date,
@@ -35,11 +33,12 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             @Param("endTime") LocalTime endTime,
             @Param("currentId") Integer currentId);
 
-    // အခန်း အချိန်ထပ်/မထပ် စစ်ဆေးရန် (Update အတွက် မိမိ ID ကို ချန်လှပ်ထားနိုင်သည်)
-    @Query("SELECT COUNT(a) > 0 FROM Appointment a WHERE a.room.roomId = :roomId " +
-            "AND a.appointmentDate = :date AND a.status NOT IN (org.myatdental.appointmentoptions.status.AppointmentStatus.Cancelled) " +
-            "AND (:currentId IS NULL OR a.id != :currentId) " +
-            "AND ((a.appointmentTime < :endTime) AND (ADDTIME(a.appointmentTime, SEC_TO_TIME(a.durationMinutes * 60)) > :startTime))")
+    // Native Query သုံး၍ အခန်း အချိန်ထပ်မထပ်စစ်ခြင်း
+    @Query(value = "SELECT COUNT(*) > 0 FROM appointments a WHERE a.room_id = :roomId " +
+            "AND a.appointment_date = :date AND a.status NOT IN ('Cancelled') " +
+            "AND (:currentId IS NULL OR a.appointment_id != :currentId) " +
+            "AND ((a.appointment_time < :endTime) AND (ADDTIME(a.appointment_time, SEC_TO_TIME(a.duration_minutes * 60)) > :startTime))",
+            nativeQuery = true)
     boolean existsOverlappingRoomAppt(
             @Param("roomId") Integer roomId,
             @Param("date") LocalDate date,
@@ -47,6 +46,5 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             @Param("endTime") LocalTime endTime,
             @Param("currentId") Integer currentId);
 
-    // ရက်စွဲအပိုင်းအခြားအလိုက် ရှာရန်
     List<Appointment> findByAppointmentDateBetween(LocalDate start, LocalDate end);
 }

@@ -150,8 +150,10 @@ public class AppointmentService {
 
     // --- Private Helpers ---
 
+    // validateAvailability method ကိုပဲ အဓိကပြပေးထားပါတယ် (ကျန်တာ အရင်အတိုင်းပါပဲ)
     private void validateAvailability(Integer dentistId, Integer roomId, LocalDate date, LocalTime startTime, Integer duration, Integer currentApptId) {
         LocalTime endTime = startTime.plusMinutes(duration != null ? duration : 30);
+
 
         if (appointmentRepository.existsOverlappingDentistAppt(dentistId, date, startTime, endTime, currentApptId)) {
             throw new RuntimeException("ဆရာဝန်တွင် ထိုအချိန်၌ ရက်ချိန်းရှိနေပါသည်။");
