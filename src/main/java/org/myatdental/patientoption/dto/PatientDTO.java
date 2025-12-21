@@ -24,10 +24,8 @@ public class PatientDTO {
 
     private LocalDate dob;
 
-    @Pattern(
-            regexp = "Male|Female|Other",
-            message = "Gender must be Male, Female or Other"
-    )
+    @NotNull(message = "Gender is required")
+    @Pattern(regexp = "Male|Female|Other", message = "Gender must be Male, Female or Other")
     private String gender;
 
     private String medHist;
