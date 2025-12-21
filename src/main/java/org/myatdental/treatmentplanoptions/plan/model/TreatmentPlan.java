@@ -2,6 +2,7 @@ package org.myatdental.treatmentplanoptions.plan.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.myatdental.patientplanoption.model.PatientPlan;
 import org.myatdental.treatmentplanoptions.item.model.TreatmentPlanItem;
 
 import java.math.BigDecimal;
@@ -57,4 +58,7 @@ public class TreatmentPlan {
         items.add(item);
         item.setPlan(this);
     }
+
+    @OneToMany(mappedBy = "plan", cascade = CascadeType.ALL)
+    private List<PatientPlan> patientPlans;
 }
