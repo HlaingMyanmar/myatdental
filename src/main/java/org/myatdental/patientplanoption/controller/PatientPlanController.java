@@ -46,7 +46,7 @@ public class PatientPlanController {
         return ResponseEntity.ok(updatedPlan);
     }
 
-    // DELETE: Remove a Patient Plan
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePatientPlan(@PathVariable Long id) {
         patientPlanService.deletePatientPlan(id);

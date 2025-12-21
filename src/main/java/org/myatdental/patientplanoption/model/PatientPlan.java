@@ -26,7 +26,7 @@ public class PatientPlan {
     @Column(name = "pp_id")
     private Integer id;
 
-    // 🔗 patient_id → patients.patient_id
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;

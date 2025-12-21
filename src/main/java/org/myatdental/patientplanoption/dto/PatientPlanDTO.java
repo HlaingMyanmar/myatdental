@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 @Data
 public class PatientPlanDTO {
-//
+
     private Long id;
 
     @NotNull(message = "Patient ID is required")

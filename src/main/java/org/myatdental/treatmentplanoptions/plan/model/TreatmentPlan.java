@@ -58,7 +58,7 @@ public class TreatmentPlan {
         items.add(item);
         item.setPlan(this);
     }
-
+//
     @OneToMany(mappedBy = "plan", cascade = CascadeType.ALL)
     private List<PatientPlan> patientPlans;
 }

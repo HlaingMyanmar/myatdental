@@ -42,7 +42,7 @@ public class PatientPlanService {
         Patient patient = patientRepository.findById(Math.toIntExact(dto.getPatientId()))
                 .orElseThrow(() -> new RuntimeException("Patient not found with id: " + dto.getPatientId()));
 
-        // TreatmentPlan existence check
+
         TreatmentPlan plan = treatmentPlanRepository.findById(Math.toIntExact(dto.getPlanId()))
                 .orElseThrow(() -> new RuntimeException("TreatmentPlan not found with id: " + dto.getPlanId()));
 
