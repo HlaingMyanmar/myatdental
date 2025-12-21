@@ -1,0 +1,199 @@
+package org.myatdental.appointmentoptions.service;
+
+import lombok.RequiredArgsConstructor;
+import org.myatdental.appointmentoptions.dto.AppointmentDTO;
+import org.myatdental.appointmentoptions.model.Appointment;
+import org.myatdental.appointmentoptions.repository.AppointmentRepository;
+import org.myatdental.appointmentoptions.status.AppointmentStatus;
+import org.myatdental.dentistoptions.repository.DentistRepository;
+import org.myatdental.patientoption.respository.PatientRepository;
+import org.myatdental.roomoptions.repository.RoomRepository;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class AppointmentService {
+
+    private final AppointmentRepository appointmentRepository;
+    private final PatientRepository patientRepository;
+    private final DentistRepository dentistRepository;
+    private final RoomRepository roomRepository;
+
+    @Transactional(readOnly = true)
+    public List<AppointmentDTO> getAllAppointments() {
+        return appointmentRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<AppointmentDTO> getAppointmentsByDateRange(LocalDate start, LocalDate end) {
+        return appointmentRepository.findByAppointmentDateBetween(start, end).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public AppointmentDTO getAppointmentById(Integer id) {
+        Appointment appt = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
+        return convertToDTO(appt);
+    }
+
+    @Transactional
+    public AppointmentDTO createAppointment(AppointmentDTO dto) {
+        // အချိန်အားမအား အရင်စစ်ဆေးပါ (New record မို့လို့ currentId က null)
+        validateAvailability(dto.getDentistId(), dto.getRoomId(),
+                dto.getAppointmentDate(), dto.getAppointmentTime(),
+                dto.getDurationMinutes(), null);
+
+        Appointment appointment = new Appointment();
+
+        // Auto Code Generation (သတ်မှတ်ထားခြင်းမရှိပါက)
+        if (dto.getCode() == null || dto.getCode().isEmpty()) {
+            appointment.setCode("APP-" + System.currentTimeMillis() % 1000000);
+        } else {
+            appointment.setCode(dto.getCode());
+        }
+
+        mapDtoToEntity(dto, appointment);
+        appointment.setStatus(AppointmentStatus.Scheduled);
+
+        // Token သတ်မှတ်ခြင်း
+        assignToken(appointment);
+
+        return convertToDTO(appointmentRepository.save(appointment));
+    }
+
+    @Transactional
+    public AppointmentDTO updateAppointment(Integer id, AppointmentDTO dto) {
+        Appointment appt = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (appt.getStatus() == AppointmentStatus.Completed || appt.getStatus() == AppointmentStatus.Cancelled) {
+            throw new RuntimeException("မပြီးဆုံးသေးသော သို့မဟုတ် မပယ်ဖျက်ရသေးသော ရက်ချိန်းကိုသာ ပြင်ဆင်နိုင်ပါသည်။");
+        }
+
+        // ရက်စွဲ သို့မဟုတ် အချိန်ပြောင်းလဲပါက Availability နှင့် Token ကို ပြန်စစ်ပါ
+        boolean isDateChanged = !appt.getAppointmentDate().equals(dto.getAppointmentDate());
+        boolean isTimeChanged = !appt.getAppointmentTime().equals(dto.getAppointmentTime());
+
+        if (isDateChanged || isTimeChanged) {
+            validateAvailability(dto.getDentistId(), dto.getRoomId(),
+                    dto.getAppointmentDate(), dto.getAppointmentTime(),
+                    dto.getDurationMinutes(), id);
+
+            if (isDateChanged) {
+                appt.setAppointmentDate(dto.getAppointmentDate());
+                assignToken(appt);
+            }
+        }
+
+        appt.setAppointmentTime(dto.getAppointmentTime());
+        appt.setDurationMinutes(dto.getDurationMinutes());
+        appt.setNotes(dto.getNotes());
+        appt.setPatientPlanId(dto.getPatientPlanId());
+
+        if (dto.getRoomId() != null) {
+            appt.setRoom(roomRepository.findById(dto.getRoomId())
+                    .orElseThrow(() -> new RuntimeException("Room not found")));
+        }
+
+        return convertToDTO(appointmentRepository.save(appt));
+    }
+
+    @Transactional
+    public AppointmentDTO updateStatus(Integer id, AppointmentStatus newStatus) {
+        Appointment appt = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (appt.getStatus() == AppointmentStatus.Cancelled && newStatus != AppointmentStatus.Cancelled) {
+            throw new RuntimeException("ပယ်ဖျက်ပြီးသား ရက်ချိန်းကို ပြန်လည်အသက်သွင်း၍ မရပါ။");
+        }
+
+        appt.setStatus(newStatus);
+        if (newStatus == AppointmentStatus.Checked_In) {
+            appt.setCheckInTime(LocalDateTime.now());
+        }
+
+        return convertToDTO(appointmentRepository.save(appt));
+    }
+
+    // --- Status Helper Methods ---
+    @Transactional public AppointmentDTO checkIn(Integer id) { return updateStatus(id, AppointmentStatus.Checked_In); }
+    @Transactional public AppointmentDTO startTreatment(Integer id) { return updateStatus(id, AppointmentStatus.In_Progress); }
+    @Transactional public AppointmentDTO completeAppointment(Integer id) { return updateStatus(id, AppointmentStatus.Completed); }
+    @Transactional public AppointmentDTO cancelAppointment(Integer id) { return updateStatus(id, AppointmentStatus.Cancelled); }
+
+    @Transactional(readOnly = true)
+    public List<AppointmentDTO> getTodayQueue() {
+        return appointmentRepository.findByAppointmentDateOrderByTokenNumberAsc(LocalDate.now()).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteAppointment(Integer id) {
+        if (!appointmentRepository.existsById(id)) {
+            throw new RuntimeException("Appointment not found");
+        }
+        appointmentRepository.deleteById(id);
+    }
+
+    // --- Private Helpers ---
+
+    private void validateAvailability(Integer dentistId, Integer roomId, LocalDate date, LocalTime startTime, Integer duration, Integer currentApptId) {
+        LocalTime endTime = startTime.plusMinutes(duration != null ? duration : 30);
+
+        if (appointmentRepository.existsOverlappingDentistAppt(dentistId, date, startTime, endTime, currentApptId)) {
+            throw new RuntimeException("ဆရာဝန်တွင် ထိုအချိန်၌ ရက်ချိန်းရှိနေပါသည်။");
+        }
+
+        if (roomId != null && appointmentRepository.existsOverlappingRoomAppt(roomId, date, startTime, endTime, currentApptId)) {
+            throw new RuntimeException("ရွေးချယ်ထားသော အခန်းမှာ ထိုအချိန်တွင် မအားသေးပါ။");
+        }
+    }
+
+    private void assignToken(Appointment appt) {
+        Integer lastToken = appointmentRepository.findMaxTokenByDate(appt.getAppointmentDate());
+        appt.setTokenNumber(lastToken == null ? 1 : lastToken + 1);
+    }
+
+    private void mapDtoToEntity(AppointmentDTO dto, Appointment appointment) {
+        appointment.setAppointmentDate(dto.getAppointmentDate() != null ? dto.getAppointmentDate() : LocalDate.now());
+        appointment.setAppointmentTime(dto.getAppointmentTime());
+        appointment.setDurationMinutes(dto.getDurationMinutes() != null ? dto.getDurationMinutes() : 30);
+        appointment.setNotes(dto.getNotes());
+        appointment.setIsFollowUp(dto.getIsFollowUp() != null && dto.getIsFollowUp());
+        appointment.setPatientPlanId(dto.getPatientPlanId());
+
+        appointment.setPatient(patientRepository.findById(dto.getPatientId())
+                .orElseThrow(() -> new RuntimeException("Patient not found")));
+
+        appointment.setDentist(dentistRepository.findById(Long.valueOf(dto.getDentistId()))
+                .orElseThrow(() -> new RuntimeException("Dentist not found")));
+
+        if (dto.getRoomId() != null) {
+            appointment.setRoom(roomRepository.findById(dto.getRoomId()).orElse(null));
+        }
+    }
+
+    private AppointmentDTO convertToDTO(Appointment appt) {
+        AppointmentDTO dto = new AppointmentDTO();
+        BeanUtils.copyProperties(appt, dto);
+        if (appt.getPatient() != null) dto.setPatientId(appt.getPatient().getId());
+        if (appt.getDentist() != null) dto.setDentistId(Math.toIntExact(appt.getDentist().getId()));
+        if (appt.getRoom() != null) dto.setRoomId(appt.getRoom().getRoomId());
+        if (appt.getPreviousAppointment() != null) dto.setPreviousAppointmentId(appt.getPreviousAppointment().getId());
+        if (appt.getStatus() != null) dto.setStatus(appt.getStatus().name());
+        return dto;
+    }
+}
