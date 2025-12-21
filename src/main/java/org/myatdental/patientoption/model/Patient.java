@@ -4,11 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.myatdental.patientplanoption.model.PatientPlan;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(
@@ -42,7 +40,7 @@ public class Patient {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 10)
-    private Gender gender;
+    private String gender;
 
     @Column(name = "med_hist", columnDefinition = "TEXT")
     private String medicalHistory;
@@ -60,14 +58,5 @@ public class Patient {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
-
-
-    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PatientPlan> patientPlans;
-
-    public enum Gender {
-        Male, Female, Other
-    }
-
 }
 
