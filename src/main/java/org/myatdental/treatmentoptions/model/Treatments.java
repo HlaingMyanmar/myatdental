@@ -6,8 +6,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.myatdental.treatmentcategoriesoptions.model.TreatmentCategories;
+import org.myatdental.treatmentrecord.model.TreatmentRecord;
 
 import java.math.BigDecimal;
+import java.util.List;
+
 @Entity
 @Table(name = "treatments")
 @Getter
@@ -36,5 +39,13 @@ public class Treatments {
 
     @Column(name = "isActive")
     private Boolean isActive = true;
+
+    @OneToMany(
+            mappedBy = "treatment",
+            cascade = CascadeType.ALL
+    )
+    private List<TreatmentRecord> treatmentRecords;
+
+
 }
 
