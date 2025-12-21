@@ -36,7 +36,7 @@ public class PatientPlanController {
         return ResponseEntity.ok(createdPlan);
     }
 
-    // PUT: Update existing Patient Plan
+
     @PutMapping("/{id}")
     public ResponseEntity<PatientPlanDTO> updatePatientPlan(
             @PathVariable Long id,

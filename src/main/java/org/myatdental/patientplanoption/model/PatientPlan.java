@@ -31,7 +31,7 @@ public class PatientPlan {
     @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;
 
-    // 🔗 plan_id → treatment_plans.plan_id
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "plan_id", nullable = false)
     private TreatmentPlan plan;

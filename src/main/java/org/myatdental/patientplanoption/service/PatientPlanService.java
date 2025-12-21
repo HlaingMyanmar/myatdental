@@ -38,7 +38,7 @@ public class PatientPlanService {
 
     @Transactional
     public PatientPlanDTO createPatientPlan(PatientPlanDTO dto) {
-        // Patient existence check
+
         Patient patient = patientRepository.findById(Math.toIntExact(dto.getPatientId()))
                 .orElseThrow(() -> new RuntimeException("Patient not found with id: " + dto.getPatientId()));
 
