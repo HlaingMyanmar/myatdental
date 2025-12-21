@@ -1,4 +1,4 @@
-package org.myatdental.patientoption;
+package org.myatdental.patientoption.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;

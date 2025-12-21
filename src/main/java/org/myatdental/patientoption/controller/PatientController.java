@@ -1,7 +1,9 @@
-package org.myatdental.patientoption;
+package org.myatdental.patientoption.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.myatdental.patientoption.dto.PatientDTO;
+import org.myatdental.patientoption.service.PatientService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,4 +1,5 @@
-package org.myatdental.patientoption;
+package org.myatdental.patientoption.respository;
+import org.myatdental.patientoption.model.Patient;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

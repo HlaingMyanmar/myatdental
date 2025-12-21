@@ -1,4 +1,4 @@
-package org.myatdental.patientoption;
+package org.myatdental.patientoption.model;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

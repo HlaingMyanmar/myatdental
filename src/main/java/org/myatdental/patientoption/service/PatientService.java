@@ -1,5 +1,8 @@
-package org.myatdental.patientoption;
+package org.myatdental.patientoption.service;
 import lombok.RequiredArgsConstructor;
+import org.myatdental.patientoption.dto.PatientDTO;
+import org.myatdental.patientoption.respository.PatientRepository;
+import org.myatdental.patientoption.model.Patient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
