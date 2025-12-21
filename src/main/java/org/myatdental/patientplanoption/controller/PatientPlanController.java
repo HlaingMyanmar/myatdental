@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/patient-plans")
+@RequestMapping("/api/patient-assign-plans")
 @RequiredArgsConstructor
 public class PatientPlanController {
 

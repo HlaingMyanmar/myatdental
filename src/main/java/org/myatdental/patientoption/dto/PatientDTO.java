@@ -2,6 +2,7 @@ package org.myatdental.patientoption.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import org.myatdental.patientoption.gender.Gender;
 
 import java.time.LocalDate;
 
@@ -24,7 +25,7 @@ public class PatientDTO {
 
     private LocalDate dob;
 
-    @NotNull(message = "Gender is required")
+    @NotNull(message = "Gender is required") // null မဖြစ်စေချင်ရင်
     @Pattern(regexp = "Male|Female|Other", message = "Gender must be Male, Female or Other")
     private String gender;
 
