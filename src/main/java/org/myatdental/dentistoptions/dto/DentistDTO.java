@@ -31,4 +31,6 @@ public class DentistDTO {
     private Boolean isActive;
 
     private LocalDate joinDate;
+
+    private Long userId;
 }

@@ -13,4 +13,6 @@ public interface DentistRepository extends JpaRepository<Dentist, Long> {
     Optional<Dentist> findByEmail(String email);
     boolean existsByCode(String code);
     boolean existsByEmail(String email);
+
+    Optional<Dentist> findByUserUsername(String username);
 }

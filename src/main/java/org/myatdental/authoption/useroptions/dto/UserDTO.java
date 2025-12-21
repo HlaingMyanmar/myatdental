@@ -15,4 +15,6 @@ public class UserDTO {
     private String authProvider;
     private Boolean isActive;
     private Set<String> roles;
+    private Long dentistId;
+
 }

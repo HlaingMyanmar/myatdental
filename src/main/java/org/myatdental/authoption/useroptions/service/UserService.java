@@ -86,6 +86,8 @@ public class UserService {
         user.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : user.getIsActive());
         user.setAuthProvider(dto.getAuthProvider() != null ? dto.getAuthProvider() : user.getAuthProvider());
 
+
+
         if (dto.getRoles() != null) {
             Set<Role> roles = new HashSet<>();
             dto.getRoles().forEach(r -> {
@@ -94,6 +96,8 @@ public class UserService {
                 roles.add(role);
             });
             user.getRoles().clear();
+
+            userRepository.saveAndFlush(user);
             user.getRoles().addAll(roles);
         }
 

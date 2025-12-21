@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.myatdental.authoption.roleoptions.model.Role;
+import org.myatdental.dentistoptions.model.Dentist;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -38,6 +39,10 @@ public class User  {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Dentist dentist;
+
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

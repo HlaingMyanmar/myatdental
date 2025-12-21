@@ -18,6 +18,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -42,6 +44,17 @@ public class AuthController {
 
         var userDetails = (org.springframework.security.core.userdetails.UserDetails) authentication.getPrincipal();
 
+        Set<String> roles = new HashSet<>();
+        Set<String> permissions = new HashSet<>();
+
+        userDetails.getAuthorities().forEach(authority -> {
+            String auth = authority.getAuthority();
+            if (auth.startsWith("ROLE_")) {
+                roles.add(auth); // ROLE_ADMIN, ROLE_DOCTOR စသည်
+            } else {
+                permissions.add(auth); // CAN_EDIT_PROFILE, VIEW_PATIENTS စသည်
+            }
+        });
 
         String accessToken = jwtService.generateToken(userDetails);
 
@@ -51,7 +64,7 @@ public class AuthController {
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(false) // Production ဆိုရင် true ထားပါ (HTTPS လိုအပ်တယ်)
+                .secure(true) // Production ဆိုရင် true ထားပါ (HTTPS လိုအပ်တယ်)
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60) // 7 days
                 .sameSite("Lax")
@@ -59,7 +72,14 @@ public class AuthController {
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        return ResponseEntity.ok(new AuthResponse(accessToken, userDetails.getUsername()));
+      //  return ResponseEntity.ok(new AuthResponse(accessToken, userDetails.getUsername()));
+
+        return ResponseEntity.ok(new AuthResponse(
+                accessToken,
+                userDetails.getUsername(),
+                roles,
+                permissions
+        ));
     }
 
 
@@ -88,7 +108,24 @@ public class AuthController {
 
         if (jwtService.isTokenValid(refreshToken, userDetails)) {
             String newAccessToken = jwtService.generateToken(userDetails);
-            return ResponseEntity.ok(new AuthResponse(newAccessToken, username));
+          //  return ResponseEntity.ok(new AuthResponse(newAccessToken, username));
+            Set<String> roles = new HashSet<>();
+            Set<String> permissions = new HashSet<>();
+
+            userDetails.getAuthorities().forEach(authority -> {
+                String auth = authority.getAuthority();
+                if (auth.startsWith("ROLE_")) {
+                    roles.add(auth);
+                } else {
+                    permissions.add(auth);
+                }
+            });
+            return ResponseEntity.ok(new AuthResponse(
+                    newAccessToken,
+                    username,
+                    roles,
+                    permissions
+            ));
         }
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

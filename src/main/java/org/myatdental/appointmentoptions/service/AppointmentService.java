@@ -50,14 +50,13 @@ public class AppointmentService {
 
     @Transactional
     public AppointmentDTO createAppointment(AppointmentDTO dto) {
-        // အချိန်အားမအား အရင်စစ်ဆေးပါ (New record မို့လို့ currentId က null)
+        // အချိန်အားမအား စစ်ဆေးခြင်း
         validateAvailability(dto.getDentistId(), dto.getRoomId(),
                 dto.getAppointmentDate(), dto.getAppointmentTime(),
                 dto.getDurationMinutes(), null);
 
         Appointment appointment = new Appointment();
 
-        // Auto Code Generation (သတ်မှတ်ထားခြင်းမရှိပါက)
         if (dto.getCode() == null || dto.getCode().isEmpty()) {
             appointment.setCode("APP-" + System.currentTimeMillis() % 1000000);
         } else {
@@ -67,7 +66,6 @@ public class AppointmentService {
         mapDtoToEntity(dto, appointment);
         appointment.setStatus(AppointmentStatus.Scheduled);
 
-        // Token သတ်မှတ်ခြင်း
         assignToken(appointment);
 
         return convertToDTO(appointmentRepository.save(appointment));
@@ -82,7 +80,6 @@ public class AppointmentService {
             throw new RuntimeException("မပြီးဆုံးသေးသော သို့မဟုတ် မပယ်ဖျက်ရသေးသော ရက်ချိန်းကိုသာ ပြင်ဆင်နိုင်ပါသည်။");
         }
 
-        // ရက်စွဲ သို့မဟုတ် အချိန်ပြောင်းလဲပါက Availability နှင့် Token ကို ပြန်စစ်ပါ
         boolean isDateChanged = !appt.getAppointmentDate().equals(dto.getAppointmentDate());
         boolean isTimeChanged = !appt.getAppointmentTime().equals(dto.getAppointmentTime());
 
@@ -127,7 +124,6 @@ public class AppointmentService {
         return convertToDTO(appointmentRepository.save(appt));
     }
 
-    // --- Status Helper Methods ---
     @Transactional public AppointmentDTO checkIn(Integer id) { return updateStatus(id, AppointmentStatus.Checked_In); }
     @Transactional public AppointmentDTO startTreatment(Integer id) { return updateStatus(id, AppointmentStatus.In_Progress); }
     @Transactional public AppointmentDTO completeAppointment(Integer id) { return updateStatus(id, AppointmentStatus.Completed); }
@@ -150,17 +146,20 @@ public class AppointmentService {
 
     // --- Private Helpers ---
 
-    // validateAvailability method ကိုပဲ အဓိကပြပေးထားပါတယ် (ကျန်တာ အရင်အတိုင်းပါပဲ)
     private void validateAvailability(Integer dentistId, Integer roomId, LocalDate date, LocalTime startTime, Integer duration, Integer currentApptId) {
         LocalTime endTime = startTime.plusMinutes(duration != null ? duration : 30);
 
-
-        if (appointmentRepository.existsOverlappingDentistAppt(dentistId, date, startTime, endTime, currentApptId)) {
+        // Long return value ကို ယူ၍ စစ်ဆေးခြင်း
+        Long dentistApptCount = appointmentRepository.countOverlappingDentistAppt(dentistId, date, startTime, endTime, currentApptId);
+        if (dentistApptCount > 0) {
             throw new RuntimeException("ဆရာဝန်တွင် ထိုအချိန်၌ ရက်ချိန်းရှိနေပါသည်။");
         }
 
-        if (roomId != null && appointmentRepository.existsOverlappingRoomAppt(roomId, date, startTime, endTime, currentApptId)) {
-            throw new RuntimeException("ရွေးချယ်ထားသော အခန်းမှာ ထိုအချိန်တွင် မအားသေးပါ။");
+        if (roomId != null) {
+            Long roomApptCount = appointmentRepository.countOverlappingRoomAppt(roomId, date, startTime, endTime, currentApptId);
+            if (roomApptCount > 0) {
+                throw new RuntimeException("ရွေးချယ်ထားသော အခန်းမှာ ထိုအချိန်တွင် မအားသေးပါ။");
+            }
         }
     }
 

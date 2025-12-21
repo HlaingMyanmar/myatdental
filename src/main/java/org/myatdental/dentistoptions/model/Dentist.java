@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.myatdental.authoption.useroptions.model.User;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -42,6 +43,10 @@ public class Dentist {
 
     @Column(name = "join_date")
     private LocalDate joinDate;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
 
     @PrePersist
