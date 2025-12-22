@@ -9,7 +9,7 @@ import org.myatdental.appointmentoptions.status.AppointmentStatus;
 import org.myatdental.dentistoptions.model.Dentist;
 import org.myatdental.patientoption.model.Patient;
 import org.myatdental.roomoptions.model.Room;
-import org.myatdental.treatmentrecord.model.TreatmentRecord;
+
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -87,11 +87,6 @@ public class Appointment {
 
     }
 
-    @OneToMany(
-            mappedBy = "appointment",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    private List<TreatmentRecord> treatmentRecords;
+
 
 }
