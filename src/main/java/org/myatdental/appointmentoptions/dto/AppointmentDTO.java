@@ -8,7 +8,7 @@ import java.time.LocalTime;
 
 @Data
 public class AppointmentDTO {
-    private Integer id;
+    private Integer appointmentId;
     private String code;
     private Integer patientId;
     private Integer dentistId;

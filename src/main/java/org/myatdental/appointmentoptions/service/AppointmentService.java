@@ -5,8 +5,10 @@ import org.myatdental.appointmentoptions.dto.AppointmentDTO;
 import org.myatdental.appointmentoptions.model.Appointment;
 import org.myatdental.appointmentoptions.repository.AppointmentRepository;
 import org.myatdental.appointmentoptions.status.AppointmentStatus;
+import org.myatdental.dentistoptions.model.Dentist;
 import org.myatdental.dentistoptions.repository.DentistRepository;
 import org.myatdental.patientoption.respository.PatientRepository;
+import org.myatdental.roomoptions.model.Room;
 import org.myatdental.roomoptions.repository.RoomRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -35,37 +37,34 @@ public class AppointmentService {
     }
 
     @Transactional(readOnly = true)
-    public List<AppointmentDTO> getAppointmentsByDateRange(LocalDate start, LocalDate end) {
-        return appointmentRepository.findByAppointmentDateBetween(start, end).stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
     public AppointmentDTO getAppointmentById(Integer id) {
         Appointment appt = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
         return convertToDTO(appt);
     }
 
+    @Transactional(readOnly = true)
+    public List<AppointmentDTO> getAppointmentsByDateRange(LocalDate start, LocalDate end) {
+        return appointmentRepository.findByAppointmentDateBetween(start, end).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public AppointmentDTO createAppointment(AppointmentDTO dto) {
-        // အချိန်အားမအား စစ်ဆေးခြင်း
-        validateAvailability(dto.getDentistId(), dto.getRoomId(),
-                dto.getAppointmentDate(), dto.getAppointmentTime(),
-                dto.getDurationMinutes(), null);
+        // Availability Check
+        validateAvailability(dto.getDentistId(), dto.getRoomId(), dto.getAppointmentDate(),
+                dto.getAppointmentTime(), dto.getDurationMinutes(), null);
 
         Appointment appointment = new Appointment();
-
         if (dto.getCode() == null || dto.getCode().isEmpty()) {
-            appointment.setCode("APP-" + System.currentTimeMillis() % 1000000);
+            appointment.setCode("APP-" + (System.currentTimeMillis() % 1000000));
         } else {
             appointment.setCode(dto.getCode());
         }
 
         mapDtoToEntity(dto, appointment);
         appointment.setStatus(AppointmentStatus.Scheduled);
-
         assignToken(appointment);
 
         return convertToDTO(appointmentRepository.save(appointment));
@@ -73,20 +72,38 @@ public class AppointmentService {
 
     @Transactional
     public AppointmentDTO updateAppointment(Integer id, AppointmentDTO dto) {
+
         Appointment appt = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
+
         if (appt.getStatus() == AppointmentStatus.Completed || appt.getStatus() == AppointmentStatus.Cancelled) {
-            throw new RuntimeException("မပြီးဆုံးသေးသော သို့မဟုတ် မပယ်ဖျက်ရသေးသော ရက်ချိန်းကိုသာ ပြင်ဆင်နိုင်ပါသည်။");
+            throw new RuntimeException("ပြီးဆုံး/ပယ်ဖျက်ထားသော ရက်ချိန်းကို ပြင်၍မရပါ။");
         }
+
 
         boolean isDateChanged = !appt.getAppointmentDate().equals(dto.getAppointmentDate());
         boolean isTimeChanged = !appt.getAppointmentTime().equals(dto.getAppointmentTime());
 
-        if (isDateChanged || isTimeChanged) {
-            validateAvailability(dto.getDentistId(), dto.getRoomId(),
-                    dto.getAppointmentDate(), dto.getAppointmentTime(),
-                    dto.getDurationMinutes(), id);
+
+        boolean isDentistChanged = !appt.getDentist().getId().equals(Long.valueOf(dto.getDentistId()));
+
+
+        Integer currentRoomId = (appt.getRoom() != null) ? appt.getRoom().getRoomId() : null;
+        boolean isRoomChanged = (currentRoomId == null && dto.getRoomId() != null) ||
+                (currentRoomId != null && !currentRoomId.equals(dto.getRoomId()));
+
+
+        if (isDateChanged || isTimeChanged || isDentistChanged || isRoomChanged) {
+            validateAvailability(
+                    dto.getDentistId(),
+                    dto.getRoomId(),
+                    dto.getAppointmentDate(),
+                    dto.getAppointmentTime(),
+                    dto.getDurationMinutes(),
+                    id
+            );
+
 
             if (isDateChanged) {
                 appt.setAppointmentDate(dto.getAppointmentDate());
@@ -94,14 +111,28 @@ public class AppointmentService {
             }
         }
 
+
         appt.setAppointmentTime(dto.getAppointmentTime());
         appt.setDurationMinutes(dto.getDurationMinutes());
         appt.setNotes(dto.getNotes());
         appt.setPatientPlanId(dto.getPatientPlanId());
 
-        if (dto.getRoomId() != null) {
-            appt.setRoom(roomRepository.findById(dto.getRoomId())
-                    .orElseThrow(() -> new RuntimeException("Room not found")));
+
+        if (isDentistChanged) {
+            Dentist newDentist = dentistRepository.findById(Long.valueOf(dto.getDentistId()))
+                    .orElseThrow(() -> new RuntimeException("Dentist not found"));
+            appt.setDentist(newDentist);
+        }
+
+
+        if (isRoomChanged) {
+            if (dto.getRoomId() != null) {
+                Room newRoom = roomRepository.findById(dto.getRoomId())
+                        .orElseThrow(() -> new RuntimeException("Room not found"));
+                appt.setRoom(newRoom);
+            } else {
+                appt.setRoom(null);
+            }
         }
 
         return convertToDTO(appointmentRepository.save(appt));
@@ -111,55 +142,21 @@ public class AppointmentService {
     public AppointmentDTO updateStatus(Integer id, AppointmentStatus newStatus) {
         Appointment appt = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
-
-        if (appt.getStatus() == AppointmentStatus.Cancelled && newStatus != AppointmentStatus.Cancelled) {
-            throw new RuntimeException("ပယ်ဖျက်ပြီးသား ရက်ချိန်းကို ပြန်လည်အသက်သွင်း၍ မရပါ။");
-        }
-
         appt.setStatus(newStatus);
-        if (newStatus == AppointmentStatus.Checked_In) {
-            appt.setCheckInTime(LocalDateTime.now());
-        }
-
+        if (newStatus == AppointmentStatus.Checked_In) appt.setCheckInTime(LocalDateTime.now());
         return convertToDTO(appointmentRepository.save(appt));
     }
 
-    @Transactional public AppointmentDTO checkIn(Integer id) { return updateStatus(id, AppointmentStatus.Checked_In); }
-    @Transactional public AppointmentDTO startTreatment(Integer id) { return updateStatus(id, AppointmentStatus.In_Progress); }
-    @Transactional public AppointmentDTO completeAppointment(Integer id) { return updateStatus(id, AppointmentStatus.Completed); }
-    @Transactional public AppointmentDTO cancelAppointment(Integer id) { return updateStatus(id, AppointmentStatus.Cancelled); }
+    // --- Helper Methods ---
 
-    @Transactional(readOnly = true)
-    public List<AppointmentDTO> getTodayQueue() {
-        return appointmentRepository.findByAppointmentDateOrderByTokenNumberAsc(LocalDate.now()).stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional
-    public void deleteAppointment(Integer id) {
-        if (!appointmentRepository.existsById(id)) {
-            throw new RuntimeException("Appointment not found");
-        }
-        appointmentRepository.deleteById(id);
-    }
-
-    // --- Private Helpers ---
-
-    private void validateAvailability(Integer dentistId, Integer roomId, LocalDate date, LocalTime startTime, Integer duration, Integer currentApptId) {
+    private void validateAvailability(Integer dentistId, Integer roomId, LocalDate date, LocalTime startTime, Integer duration, Integer currentId) {
         LocalTime endTime = startTime.plusMinutes(duration != null ? duration : 30);
 
-        // Long return value ကို ယူ၍ စစ်ဆေးခြင်း
-        Long dentistApptCount = appointmentRepository.countOverlappingDentistAppt(dentistId, date, startTime, endTime, currentApptId);
-        if (dentistApptCount > 0) {
+        if (appointmentRepository.countOverlappingDentistAppt(dentistId, date, startTime, endTime, currentId) > 0) {
             throw new RuntimeException("ဆရာဝန်တွင် ထိုအချိန်၌ ရက်ချိန်းရှိနေပါသည်။");
         }
-
-        if (roomId != null) {
-            Long roomApptCount = appointmentRepository.countOverlappingRoomAppt(roomId, date, startTime, endTime, currentApptId);
-            if (roomApptCount > 0) {
-                throw new RuntimeException("ရွေးချယ်ထားသော အခန်းမှာ ထိုအချိန်တွင် မအားသေးပါ။");
-            }
+        if (roomId != null && appointmentRepository.countOverlappingRoomAppt(roomId, date, startTime, endTime, currentId) > 0) {
+            throw new RuntimeException("ရွေးချယ်ထားသော အခန်းမှာ မအားသေးပါ။");
         }
     }
 
@@ -173,15 +170,8 @@ public class AppointmentService {
         appointment.setAppointmentTime(dto.getAppointmentTime());
         appointment.setDurationMinutes(dto.getDurationMinutes() != null ? dto.getDurationMinutes() : 30);
         appointment.setNotes(dto.getNotes());
-        appointment.setIsFollowUp(dto.getIsFollowUp() != null && dto.getIsFollowUp());
-        appointment.setPatientPlanId(dto.getPatientPlanId());
-
-        appointment.setPatient(patientRepository.findById(dto.getPatientId())
-                .orElseThrow(() -> new RuntimeException("Patient not found")));
-
-        appointment.setDentist(dentistRepository.findById(Long.valueOf(dto.getDentistId()))
-                .orElseThrow(() -> new RuntimeException("Dentist not found")));
-
+        appointment.setPatient(patientRepository.findById(dto.getPatientId()).orElseThrow());
+        appointment.setDentist(dentistRepository.findById(Long.valueOf(dto.getDentistId())).orElseThrow());
         if (dto.getRoomId() != null) {
             appointment.setRoom(roomRepository.findById(dto.getRoomId()).orElse(null));
         }
@@ -190,11 +180,53 @@ public class AppointmentService {
     private AppointmentDTO convertToDTO(Appointment appt) {
         AppointmentDTO dto = new AppointmentDTO();
         BeanUtils.copyProperties(appt, dto);
+
+        // [အရေးကြီး] ID ကို လက်နဲ့ Mapping လုပ်ပေးခြင်း
+        dto.setAppointmentId(appt.getAppointmentId());
+
         if (appt.getPatient() != null) dto.setPatientId(appt.getPatient().getId());
         if (appt.getDentist() != null) dto.setDentistId(Math.toIntExact(appt.getDentist().getId()));
         if (appt.getRoom() != null) dto.setRoomId(appt.getRoom().getRoomId());
-        if (appt.getPreviousAppointment() != null) dto.setPreviousAppointmentId(appt.getPreviousAppointment().getId());
+        if (appt.getPreviousAppointment() != null) dto.setPreviousAppointmentId(appt.getPreviousAppointment().getAppointmentId());
         if (appt.getStatus() != null) dto.setStatus(appt.getStatus().name());
+
         return dto;
+    }
+
+    @Transactional public AppointmentDTO checkIn(Integer id) { return updateStatus(id, AppointmentStatus.Checked_In); }
+    @Transactional public AppointmentDTO startTreatment(Integer id) { return updateStatus(id, AppointmentStatus.In_Progress); }
+    @Transactional public AppointmentDTO completeAppointment(Integer id) { return updateStatus(id, AppointmentStatus.Completed); }
+    @Transactional public AppointmentDTO cancelAppointment(Integer id) { return updateStatus(id, AppointmentStatus.Cancelled); }
+
+    @Transactional(readOnly = true)
+    public List<AppointmentDTO> getTodayQueue() {
+        return appointmentRepository.findByAppointmentDateOrderByTokenNumberAsc(LocalDate.now())
+                .stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteAppointment(Integer id) {
+        appointmentRepository.deleteById(id);
+    }
+
+    @Transactional
+    public AppointmentDTO changeRoom(Integer id, Integer roomId) {
+        Appointment appt = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        validateAvailability(
+                Math.toIntExact(appt.getDentist().getId()),
+                roomId,
+                appt.getAppointmentDate(),
+                appt.getAppointmentTime(),
+                appt.getDurationMinutes(),
+                id
+        );
+
+        Room newRoom = roomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
+
+        appt.setRoom(newRoom);
+        return convertToDTO(appointmentRepository.save(appt));
     }
 }

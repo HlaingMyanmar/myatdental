@@ -9,6 +9,7 @@ import org.myatdental.appointmentoptions.status.AppointmentStatus;
 import org.myatdental.dentistoptions.model.Dentist;
 import org.myatdental.patientoption.model.Patient;
 import org.myatdental.roomoptions.model.Room;
+import org.myatdental.treatmentrecord.model.TreatmentRecord;
 
 
 import java.time.LocalDate;
@@ -27,7 +28,7 @@ public class Appointment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "appointment_id")
-    private Integer id;
+    private Integer appointmentId;;
 
     @Column(length = 10, nullable = false, unique = true)
     private String code;
@@ -87,6 +88,11 @@ public class Appointment {
 
     }
 
-
+    @OneToMany(
+            mappedBy = "appointment",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<TreatmentRecord> treatmentRecords;
 
 }

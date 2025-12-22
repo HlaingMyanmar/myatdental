@@ -2,22 +2,18 @@ package org.myatdental.treatmentrecord.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
 public class TreatmentRecordDTO {
-
     private Long recordId;
 
-
     @NotNull(message = "Appointment ID is required")
-    private Long appointmentId;
-
+    private Integer appointmentId;
 
     @NotNull(message = "Treatment ID is required")
-    private Long treatmentId;
+    private Integer treatmentId;
 
     @Size(max = 50, message = "Tooth or site must not exceed 50 characters")
     private String toothOrSite;
@@ -32,4 +28,3 @@ public class TreatmentRecordDTO {
 
     private LocalDateTime performedAt;
 }
-

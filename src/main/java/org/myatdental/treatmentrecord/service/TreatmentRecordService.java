@@ -1,7 +1,9 @@
 package org.myatdental.treatmentrecord.service;
+
 import lombok.RequiredArgsConstructor;
 import org.myatdental.appointmentoptions.model.Appointment;
 import org.myatdental.appointmentoptions.repository.AppointmentRepository;
+import org.myatdental.appointmentoptions.status.AppointmentStatus;
 import org.myatdental.treatmentoptions.model.Treatments;
 import org.myatdental.treatmentoptions.repository.TreatmentsRepository;
 import org.myatdental.treatmentrecord.dto.TreatmentRecordDTO;
@@ -20,36 +22,29 @@ public class TreatmentRecordService {
 
     private final TreatmentRecordRepository treatmentRecordRepository;
     private final AppointmentRepository appointmentRepository;
-    private final TreatmentsRepository treatmentRepository;
-
+    private final TreatmentsRepository treatmentsRepository;
 
     @Transactional(readOnly = true)
     public List<TreatmentRecordDTO> getAllRecords() {
-        return treatmentRecordRepository.findAll()
-                .stream()
+        return treatmentRecordRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-
     @Transactional(readOnly = true)
     public TreatmentRecordDTO getRecordById(Long id) {
         TreatmentRecord record = treatmentRecordRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("TreatmentRecord not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("Treatment Record not found with id: " + id));
         return convertToDTO(record);
     }
 
-
     @Transactional
     public TreatmentRecordDTO createRecord(TreatmentRecordDTO dto) {
+        Appointment appointment = appointmentRepository.findById(dto.getAppointmentId())
+                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + dto.getAppointmentId()));
 
-        Appointment appointment = appointmentRepository.findById(Math.toIntExact(dto.getAppointmentId()))
-                .orElseThrow(() ->
-                        new RuntimeException("Appointment not found with id: " + dto.getAppointmentId()));
-
-        Treatments treatment = treatmentRepository.findById(Math.toIntExact(dto.getTreatmentId()))
-                .orElseThrow(() ->
-                        new RuntimeException("Treatment not found with id: " + dto.getTreatmentId()));
+        Treatments treatment = treatmentsRepository.findById(dto.getTreatmentId())
+                .orElseThrow(() -> new RuntimeException("Treatment type not found with id: " + dto.getTreatmentId()));
 
         TreatmentRecord record = new TreatmentRecord();
         record.setAppointment(appointment);
@@ -58,31 +53,24 @@ public class TreatmentRecordService {
         record.setDiagnosis(dto.getDiagnosis());
         record.setPriceCharged(dto.getPriceCharged());
         record.setRecordNotes(dto.getRecordNotes());
-        record.setPerformedAt(dto.getPerformedAt() != null
-                ? dto.getPerformedAt()
-                : LocalDateTime.now());
+        record.setPerformedAt(dto.getPerformedAt() != null ? dto.getPerformedAt() : LocalDateTime.now());
+
+        // [Logic သစ်] ကုသမှုမှတ်တမ်း သွင်းပြီးလျှင် Appointment ကို Completed ပြောင်းပေးရမည်
+        appointment.setStatus(AppointmentStatus.Completed);
+        appointmentRepository.save(appointment);
 
         return convertToDTO(treatmentRecordRepository.save(record));
     }
 
-
     @Transactional
     public TreatmentRecordDTO updateRecord(Long id, TreatmentRecordDTO dto) {
-
         TreatmentRecord record = treatmentRecordRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("TreatmentRecord not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("Treatment Record not found"));
 
-        if (dto.getToothOrSite() != null)
-            record.setToothOrSite(dto.getToothOrSite());
-
-        if (dto.getDiagnosis() != null)
-            record.setDiagnosis(dto.getDiagnosis());
-
-        if (dto.getPriceCharged() != null)
-            record.setPriceCharged(dto.getPriceCharged());
-
-        if (dto.getRecordNotes() != null)
-            record.setRecordNotes(dto.getRecordNotes());
+        record.setToothOrSite(dto.getToothOrSite());
+        record.setDiagnosis(dto.getDiagnosis());
+        record.setPriceCharged(dto.getPriceCharged());
+        record.setRecordNotes(dto.getRecordNotes());
 
         return convertToDTO(treatmentRecordRepository.save(record));
     }
@@ -90,33 +78,29 @@ public class TreatmentRecordService {
     @Transactional
     public void deleteRecord(Long id) {
         if (!treatmentRecordRepository.existsById(id)) {
-            throw new RuntimeException("TreatmentRecord not found with id: " + id);
+            throw new RuntimeException("Record not found");
         }
         treatmentRecordRepository.deleteById(id);
     }
 
-
     private TreatmentRecordDTO convertToDTO(TreatmentRecord record) {
-
         TreatmentRecordDTO dto = new TreatmentRecordDTO();
-
         dto.setRecordId(record.getRecordId());
 
-        dto.setAppointmentId(
-                record.getRecordId());
+        // [Bug Fixed] - record.getRecordId() အစား Appointment ID အစစ်ကို ယူရန်
+        if (record.getAppointment() != null) {
+            dto.setAppointmentId(record.getAppointment().getAppointmentId());
+        }
 
-        dto.setTreatmentId(
-                record.getTreatment().getTreatmentId().longValue()
-        );
+        if (record.getTreatment() != null) {
+            dto.setTreatmentId(record.getTreatment().getTreatmentId());
+        }
 
         dto.setToothOrSite(record.getToothOrSite());
         dto.setDiagnosis(record.getDiagnosis());
         dto.setPriceCharged(record.getPriceCharged());
         dto.setRecordNotes(record.getRecordNotes());
         dto.setPerformedAt(record.getPerformedAt());
-
         return dto;
     }
-
 }
-

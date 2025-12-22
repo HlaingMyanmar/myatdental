@@ -16,11 +16,11 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
     @Query("SELECT MAX(a.tokenNumber) FROM Appointment a WHERE a.appointmentDate = :date")
     Integer findMaxTokenByDate(@Param("date") LocalDate date);
 
-    List<Appointment> findByPatientId(Integer patientId);
-
     List<Appointment> findByAppointmentDateOrderByTokenNumberAsc(LocalDate date);
 
-    // Native Query တွင် Return Type ကို Long အဖြစ်ပြောင်းလဲခြင်း (Error ဖြေရှင်းရန်)
+    List<Appointment> findByAppointmentDateBetween(LocalDate start, LocalDate end);
+
+    // ဆရာဝန် အချိန်ထပ်မထပ်စစ်ရန် (Long ပြန်ပေးရန်ပြင်ထားသည်)
     @Query(value = "SELECT COUNT(*) FROM appointments a WHERE a.dentist_id = :dentistId " +
             "AND a.appointment_date = :date AND a.status NOT IN ('Cancelled') " +
             "AND (:currentId IS NULL OR a.appointment_id != :currentId) " +
@@ -33,6 +33,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             @Param("endTime") LocalTime endTime,
             @Param("currentId") Integer currentId);
 
+    // အခန်း အချိန်ထပ်မထပ်စစ်ရန်
     @Query(value = "SELECT COUNT(*) FROM appointments a WHERE a.room_id = :roomId " +
             "AND a.appointment_date = :date AND a.status NOT IN ('Cancelled') " +
             "AND (:currentId IS NULL OR a.appointment_id != :currentId) " +
@@ -44,6 +45,4 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             @Param("startTime") LocalTime startTime,
             @Param("endTime") LocalTime endTime,
             @Param("currentId") Integer currentId);
-
-    List<Appointment> findByAppointmentDateBetween(LocalDate start, LocalDate end);
 }
