@@ -1,5 +1,8 @@
 package org.myatdental.treatmentrecord.service;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.myatdental.appointmentoptions.model.Appointment;
 import org.myatdental.appointmentoptions.repository.AppointmentRepository;
@@ -12,7 +15,9 @@ import org.myatdental.treatmentrecord.repository.TreatmentRecordRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -77,10 +82,17 @@ public class TreatmentRecordService {
 
     @Transactional
     public void deleteRecord(Long id) {
-        if (!treatmentRecordRepository.existsById(id)) {
-            throw new RuntimeException("Record not found");
+        TreatmentRecord record = treatmentRecordRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Treatment Record not found with id: " + id));
+        Appointment appointment = record.getAppointment();
+        treatmentRecordRepository.delete(record);
+        List<TreatmentRecord> remainingRecords = treatmentRecordRepository.findByAppointment_AppointmentId(Long.valueOf(appointment.getAppointmentId()));
+
+
+        if (remainingRecords.isEmpty()) {
+            appointment.setStatus(AppointmentStatus.Scheduled);
+            appointmentRepository.save(appointment);
         }
-        treatmentRecordRepository.deleteById(id);
     }
 
     private TreatmentRecordDTO convertToDTO(TreatmentRecord record) {
@@ -103,4 +115,55 @@ public class TreatmentRecordService {
         dto.setPerformedAt(record.getPerformedAt());
         return dto;
     }
+
+    @Data
+    public static class BulkTreatmentRequestDTO {
+        @NotNull(message = "Appointment ID is required")
+        private Integer appointmentId;
+
+        @NotEmpty(message = "At least one treatment is required")
+        private List<TreatmentItemDTO> treatments; // ကုသမှုများစာရင်း
+    }
+
+    @Data
+    public static class TreatmentItemDTO {
+        @NotNull(message = "Treatment ID is required")
+        private Integer treatmentId;
+
+        private String toothOrSite;
+        private String diagnosis;
+
+        @NotNull(message = "Price is required")
+        private BigDecimal priceCharged;
+
+        private String recordNotes;
+    }
+    @Transactional
+    public List<TreatmentRecordDTO> createBulkRecords(BulkTreatmentRequestDTO bulkDto) {
+
+        Appointment appointment = appointmentRepository.findById(bulkDto.getAppointmentId())
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        List<TreatmentRecord> recordsToSave = new ArrayList<>();
+
+        for (TreatmentItemDTO item : bulkDto.getTreatments()) {
+            Treatments treatment = treatmentsRepository.findById(item.getTreatmentId())
+                    .orElseThrow(() -> new RuntimeException("Treatment type not found ID: " + item.getTreatmentId()));
+
+            TreatmentRecord record = new TreatmentRecord();
+            record.setAppointment(appointment);
+            record.setTreatment(treatment);
+            record.setToothOrSite(item.getToothOrSite());
+            record.setDiagnosis(item.getDiagnosis());
+            record.setPriceCharged(item.getPriceCharged());
+            record.setRecordNotes(item.getRecordNotes());
+            record.setPerformedAt(LocalDateTime.now());
+            recordsToSave.add(record);
+        }
+        List<TreatmentRecord> savedRecords = treatmentRecordRepository.saveAll(recordsToSave);
+        appointment.setStatus(AppointmentStatus.Completed);
+        appointmentRepository.save(appointment);
+        return savedRecords.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
 }

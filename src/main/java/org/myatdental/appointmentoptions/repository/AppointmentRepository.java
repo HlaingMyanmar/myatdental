@@ -1,6 +1,7 @@
 package org.myatdental.appointmentoptions.repository;
 
 import org.myatdental.appointmentoptions.model.Appointment;
+import org.myatdental.appointmentoptions.status.AppointmentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -45,4 +46,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             @Param("startTime") LocalTime startTime,
             @Param("endTime") LocalTime endTime,
             @Param("currentId") Integer currentId);
+
+    List<Appointment> findByDentist_Id(Long dentistId);
+
+    List<Appointment> findByDentist_IdAndStatusInOrderByTokenNumberAsc(Long dentistId, List<AppointmentStatus> statuses);
 }

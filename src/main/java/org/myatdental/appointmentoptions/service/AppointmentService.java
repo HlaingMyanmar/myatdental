@@ -229,4 +229,59 @@ public class AppointmentService {
         appt.setRoom(newRoom);
         return convertToDTO(appointmentRepository.save(appt));
     }
+
+    @Transactional(readOnly = true)
+    public List<AppointmentDTO> getAppointmentsByDoctor(String username) {
+        Dentist doctor = dentistRepository.findByUserUsername(username)
+                .orElseThrow(() -> new RuntimeException("Doctor profile not found"));
+        return appointmentRepository.findByDentist_Id(doctor.getId()).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+    // AppointmentService.java ထဲတွင် ထည့်ရန်
+
+    @Transactional(readOnly = true)
+    public List<AppointmentDTO> getDoctorActiveQueue(String username) {
+        // ၁။ Username ဖြင့် Dentist ကို ရှာသည်
+        Dentist doctor = dentistRepository.findByUserUsername(username)
+                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+
+        // ၂။ 'Checked-In' နှင့် 'In-Progress' ဖြစ်နေသော လူနာများကိုသာ ဆွဲထုတ်သည်
+        List<AppointmentStatus> activeStatuses = List.of(AppointmentStatus.Checked_In, AppointmentStatus.In_Progress);
+
+        // Repository တွင် findByDentist_IdAndStatusInOrderByTokenNumberAsc လိုအပ်သည်
+        return appointmentRepository.findByDentist_IdAndStatusInOrderByTokenNumberAsc(doctor.getId(), activeStatuses)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+    // AppointmentService.java ထဲတွင် ထည့်ရန်
+
+    @Transactional
+    public AppointmentDTO startTreatmentByDoctor(Integer appointmentId, String dentistUsername) {
+        // ၁။ ရက်ချိန်း (Appointment) ကို ရှာသည်
+        Appointment appt = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + appointmentId));
+
+        // ၂။ [Security Check] ဒီရက်ချိန်းက လက်ရှိ Login ဝင်ထားတဲ့ ဆရာဝန်နဲ့ဆိုင်သလား စစ်သည်
+        if (!appt.getDentist().getUser().getUsername().equals(dentistUsername)) {
+            throw new RuntimeException("သင်သည် ဤလူနာကို ကုသမှုစတင်ခွင့်မရှိပါ။");
+        }
+
+        // ၃။ ပယ်ဖျက်ပြီးသား သို့မဟုတ် ပြီးဆုံးပြီးသားဆိုလျှင် ပြောင်းခွင့်မပေးပါ
+        if (appt.getStatus() == AppointmentStatus.Cancelled || appt.getStatus() == AppointmentStatus.Completed) {
+            throw new RuntimeException("ဤရက်ချိန်းမှာ ပယ်ဖျက်ထားခြင်း (သို့မဟုတ်) ပြီးဆုံးသွားခြင်း ဖြစ်သောကြောင့် ကုသမှုစတင်၍မရပါ။");
+        }
+
+        // ၄။ Status ကို 'In_Progress' သို့ တိုက်ရိုက်ပြောင်းလဲသည်
+        appt.setStatus(AppointmentStatus.In_Progress);
+
+        // ၅။ လူနာ ရောက်ရှိချိန် (Check-in Time) မရှိသေးလျှင် ယခုအချိန်ကို ထည့်ပေးမည်
+        if (appt.getCheckInTime() == null) {
+            appt.setCheckInTime(LocalDateTime.now());
+        }
+
+        // ၆။ သိမ်းဆည်းပြီး DTO အဖြစ် ပြန်ထုတ်ပေးသည်
+        return convertToDTO(appointmentRepository.save(appt));
+    }
 }

@@ -17,25 +17,31 @@ public class TreatmentRecordController {
     private final TreatmentRecordService treatmentRecordService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('Admin', 'Administrator', 'DOCTOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR', 'DOCTOR')")
     public ResponseEntity<List<TreatmentRecordDTO>> getAllRecords() {
         return ResponseEntity.ok(treatmentRecordService.getAllRecords());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('Admin', 'Administrator', 'DOCTOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR', 'DOCTOR')")
     public ResponseEntity<TreatmentRecordDTO> getRecordById(@PathVariable Long id) {
         return ResponseEntity.ok(treatmentRecordService.getRecordById(id));
     }
 
-    @PostMapping
-    @PreAuthorize("hasAnyRole('Admin', 'Administrator', 'DOCTOR')")
-    public ResponseEntity<TreatmentRecordDTO> createRecord(@Valid @RequestBody TreatmentRecordDTO dto) {
-        return ResponseEntity.ok(treatmentRecordService.createRecord(dto));
+//    @PostMapping
+//    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR', 'DOCTOR')")
+//    public ResponseEntity<TreatmentRecordDTO> createRecord(@Valid @RequestBody TreatmentRecordDTO dto) {
+//        return ResponseEntity.ok(treatmentRecordService.createRecord(dto));
+//    }
+
+    @PostMapping("/bulk")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR', 'DOCTOR')")
+    public ResponseEntity<List<TreatmentRecordDTO>> createBulkRecords(@Valid @RequestBody TreatmentRecordService.BulkTreatmentRequestDTO dto) {
+        return ResponseEntity.ok(treatmentRecordService.createBulkRecords(dto));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('Admin', 'Administrator', 'DOCTOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR', 'DOCTOR')")
     public ResponseEntity<TreatmentRecordDTO> updateRecord(
             @PathVariable Long id,
             @Valid @RequestBody TreatmentRecordDTO dto) {
@@ -43,7 +49,7 @@ public class TreatmentRecordController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('Admin', 'Administrator')") // ဖျက်ခြင်းကို Admin သာ လုပ်နိုင်ရန်
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR')") // ဖျက်ခြင်းကို Admin သာ လုပ်နိုင်ရန်
     public ResponseEntity<Void> deleteRecord(@PathVariable Long id) {
         treatmentRecordService.deleteRecord(id);
         return ResponseEntity.noContent().build();
