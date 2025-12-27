@@ -22,7 +22,7 @@ public class UserController {
     private static final String USER_TOPIC = "/topic/users";
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR',, 'ADMIN', 'ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR')")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
@@ -33,7 +33,7 @@ public class UserController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR',, 'ADMIN', 'ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR')")
     public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO dto) {
         UserDTO createdUser = userService.createUser(dto);
         messagingTemplate.convertAndSend(USER_TOPIC, "USER_CREATED");
@@ -41,7 +41,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR',, 'ADMIN', 'ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR')")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserDTO dto) {
         UserDTO updatedUser = userService.updateUser(id, dto);
         messagingTemplate.convertAndSend(USER_TOPIC, "USER_UPDATED");
@@ -49,7 +49,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR',, 'ADMIN', 'ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         messagingTemplate.convertAndSend(USER_TOPIC, "USER_DELETED");
@@ -57,7 +57,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}/toggle-status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR',, 'ADMIN', 'ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR')")
     public ResponseEntity<UserDTO> toggleUserStatus(@PathVariable Long id) {
         UserDTO updated = userService.toggleUserStatus(id);
         messagingTemplate.convertAndSend(USER_TOPIC, "USER_STATUS_TOGGLED");

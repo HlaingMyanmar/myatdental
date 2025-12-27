@@ -17,7 +17,6 @@ public class RoleController {
     private final SimpMessagingTemplate messagingTemplate;
     private final RoleService roleService;
 
-    // WebSocket Topic Path
     private static final String ROLE_TOPIC = "/topic/roles";
 
     @GetMapping
@@ -28,7 +27,6 @@ public class RoleController {
     @PostMapping
     public ResponseEntity<RoleDTO> createRole(@RequestBody RoleDTO roleDTO) {
         RoleDTO created = roleService.createRole(roleDTO);
-        // [WebSocket] အသစ်တိုးကြောင်း အကြောင်းကြားမယ်
         messagingTemplate.convertAndSend(ROLE_TOPIC, "ROLE_CREATED");
         return ResponseEntity.ok(created);
     }
@@ -36,7 +34,6 @@ public class RoleController {
     @PutMapping("/{id}")
     public ResponseEntity<RoleDTO> updateRole(@PathVariable Integer id, @RequestBody RoleDTO roleDTO) {
         RoleDTO updated = roleService.updateRole(id, roleDTO);
-        // [WebSocket] ပြင်လိုက်ကြောင်း အကြောင်းကြားမယ်
         messagingTemplate.convertAndSend(ROLE_TOPIC, "ROLE_UPDATED");
         return ResponseEntity.ok(updated);
     }
@@ -44,7 +41,6 @@ public class RoleController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRole(@PathVariable Integer id) {
         roleService.deleteRole(id);
-        // [WebSocket] ဖျက်လိုက်ကြောင်း အကြောင်းကြားမယ်
         messagingTemplate.convertAndSend(ROLE_TOPIC, "ROLE_DELETED");
         return ResponseEntity.noContent().build();
     }
@@ -52,7 +48,6 @@ public class RoleController {
     @PostMapping("/{roleId}/permissions/{permissionId}")
     public ResponseEntity<Void> assignPermission(@PathVariable Integer roleId, @PathVariable Long permissionId) {
         roleService.assignPermission(roleId, permissionId);
-        // [WebSocket] Permission အပြောင်းအလဲရှိကြောင်း အကြောင်းကြားမယ်
         messagingTemplate.convertAndSend(ROLE_TOPIC, "PERMISSION_ASSIGNED");
         return ResponseEntity.ok().build();
     }
@@ -60,7 +55,6 @@ public class RoleController {
     @DeleteMapping("/{roleId}/permissions/{permissionId}")
     public ResponseEntity<Void> removePermission(@PathVariable Integer roleId, @PathVariable Long permissionId) {
         roleService.removePermission(roleId, permissionId);
-        // [WebSocket] Permission အပြောင်းအလဲရှိကြောင်း အကြောင်းကြားမယ်
         messagingTemplate.convertAndSend(ROLE_TOPIC, "PERMISSION_REMOVED");
         return ResponseEntity.noContent().build();
     }
