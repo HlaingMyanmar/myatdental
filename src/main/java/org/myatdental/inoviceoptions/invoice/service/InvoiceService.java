@@ -5,11 +5,19 @@ import org.myatdental.inoviceoptions.invoice.dto.InvoiceRequestDTO;
 import org.myatdental.inoviceoptions.invoice.dto.InvoiceResponseDTO;
 import org.myatdental.inoviceoptions.invoice.model.Invoice;
 import org.myatdental.inoviceoptions.invoice.repository.InvoiceRepository;
+import org.myatdental.inoviceoptions.invoiceadditioanal.dto.InvoiceAdditionalChargeResponseDTO;
+import org.myatdental.inoviceoptions.invoiceadditioanal.service.InvoiceAdditionalChargeService;
+import org.myatdental.inoviceoptions.item.dto.InvoiceItemResponseDTO;
+import org.myatdental.inoviceoptions.item.service.InvoiceItemService;
+import org.myatdental.inoviceoptions.payment.model.Payment;
+import org.myatdental.inoviceoptions.payment.repository.PaymentRepository;
+import org.myatdental.inoviceoptions.payment.service.PaymentService;
 import org.myatdental.patientoption.model.Patient;
 
 import org.myatdental.patientoption.respository.PatientRepository;
 import org.myatdental.patientplanoption.model.PatientPlan;
 import org.myatdental.patientplanoption.respository.PatientPlanRepository;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,16 +31,18 @@ public class InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
     private final PatientRepository patientRepository;
-    private final PatientPlanRepository patientPlanRepository; // Inject if PatientPlan exists
+    private final PatientPlanRepository patientPlanRepository;
+    private final InvoiceItemService invoiceItemService;
+    private final InvoiceAdditionalChargeService invoiceAdditionalChargeService;
+    private final PaymentRepository paymentRepository;
 
-
-
-    public InvoiceService(InvoiceRepository invoiceRepository,
-                          PatientRepository patientRepository,
-                          PatientPlanRepository patientPlanRepository) {
+    public InvoiceService(InvoiceRepository invoiceRepository, PatientRepository patientRepository, PatientPlanRepository patientPlanRepository, InvoiceItemService invoiceItemService, InvoiceAdditionalChargeService invoiceAdditionalChargeService, PaymentRepository paymentRepository) {
         this.invoiceRepository = invoiceRepository;
         this.patientRepository = patientRepository;
         this.patientPlanRepository = patientPlanRepository;
+        this.invoiceItemService = invoiceItemService;
+        this.invoiceAdditionalChargeService = invoiceAdditionalChargeService;
+        this.paymentRepository = paymentRepository;
     }
 
     // Helper to convert Entity to ResponseDTO
@@ -189,4 +199,53 @@ public class InvoiceService {
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public BigDecimal calculateTotalDueAmountForInvoice(Integer invoiceId) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found with id: " + invoiceId));
+
+        BigDecimal totalItemsAmount = BigDecimal.ZERO;
+        BigDecimal totalAdditionalChargesAmount = BigDecimal.ZERO;
+        BigDecimal totalPaidAmount = BigDecimal.ZERO;
+
+
+        List<InvoiceItemResponseDTO> items = invoiceItemService.getInvoiceItemsByInvoiceId(invoiceId);
+        for (InvoiceItemResponseDTO item : items) {
+
+            BigDecimal itemTotal = item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+            totalItemsAmount = totalItemsAmount.add(itemTotal);
+        }
+        List<InvoiceAdditionalChargeResponseDTO> charges = invoiceAdditionalChargeService.getInvoiceAdditionalChargesByInvoiceId(invoiceId);
+        for (InvoiceAdditionalChargeResponseDTO charge : charges) {
+            totalAdditionalChargesAmount = totalAdditionalChargesAmount.add(charge.getChargedAmount());
+        }
+
+        List<Payment> payments = paymentRepository.findByInvoice_InvoiceId(invoiceId);
+        for (Payment payment : payments) {
+            totalPaidAmount = totalPaidAmount.add(payment.getAmount());
+        }
+
+        BigDecimal grandTotal = totalItemsAmount.add(totalAdditionalChargesAmount);
+        BigDecimal dueAmount = grandTotal.subtract(totalPaidAmount);
+
+        return dueAmount;
+    }
+    @Transactional
+    public InvoiceResponseDTO updateInvoiceStatus(Integer invoiceId, Invoice.InvoiceStatus newStatus) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found with id: " + invoiceId));
+
+        invoice.setStatus(newStatus);
+        Invoice updatedInvoice = invoiceRepository.save(invoice);
+        return convertToResponseDTO(updatedInvoice);
+    }
+
+    private InvoiceResponseDTO convertToResponseDTO(Invoice invoice) {
+        InvoiceResponseDTO dto = new InvoiceResponseDTO();
+        BeanUtils.copyProperties(invoice, dto);
+        return dto;
+    }
+
+
 }

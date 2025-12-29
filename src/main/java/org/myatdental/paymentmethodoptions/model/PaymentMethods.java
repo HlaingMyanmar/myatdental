@@ -5,6 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.myatdental.inoviceoptions.payment.model.Payment;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "payment_methods")
@@ -27,4 +31,9 @@ public class PaymentMethods {
 
     @Column(name = "is_active")
     private Boolean isActive = true;
+
+    @OneToMany(mappedBy = "method", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<Payment> payments = new HashSet<>();
+
+
 }
