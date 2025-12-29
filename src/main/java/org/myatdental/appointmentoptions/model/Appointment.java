@@ -10,11 +10,13 @@ import org.myatdental.dentistoptions.model.Dentist;
 import org.myatdental.patientoption.model.Patient;
 import org.myatdental.roomoptions.model.Room;
 import org.myatdental.treatmentrecord.model.TreatmentRecord;
+import org.myatdental.vitaloption.patient.model.PatientVital;
 
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -79,6 +81,9 @@ public class Appointment {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PatientVital> patientVitals = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

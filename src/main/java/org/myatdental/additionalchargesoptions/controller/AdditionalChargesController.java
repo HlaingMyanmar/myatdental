@@ -20,11 +20,9 @@ public class AdditionalChargesController {
     private final AdditionalChargesService additionalChargesService;
     private final SimpMessagingTemplate messagingTemplate;
 
-    // WebSocket Topic လမ်းကြောင်း
     private static final String CHARGE_TOPIC = "/topic/additional-charges";
 
     @GetMapping
-    // အားလုံးကြည့်ရှုခွင့်ပေးမည် (Admin, Doctor, Receptionist)
     @PreAuthorize("hasAnyRole('ADMIN', 'AdMINISTRATOR', 'DOCTOR', 'RECEPTIONIST')")
     public ResponseEntity<List<AdditionalChargesDTO>> getAllCharges() {
         return ResponseEntity.ok(additionalChargesService.getAllCharges());
@@ -36,11 +34,9 @@ public class AdditionalChargesController {
     }
 
     @PostMapping
-    // Admin သာလျှင် အသစ်ဆောက်ခွင့်ရှိမည်
     @PreAuthorize("hasAnyRole('ADMIN', 'AdMINISTRATOR')")
     public ResponseEntity<AdditionalChargesDTO> createCharge(@Valid @RequestBody AdditionalChargesDTO dto) {
         AdditionalChargesDTO createdCharge = additionalChargesService.createCharge(dto);
-        // [WebSocket] Message ပို့မည်
         messagingTemplate.convertAndSend(CHARGE_TOPIC, "CHARGE_CREATED");
         return new ResponseEntity<>(createdCharge, HttpStatus.CREATED);
     }
@@ -52,7 +48,6 @@ public class AdditionalChargesController {
             @Valid @RequestBody AdditionalChargesDTO dto
     ) {
         AdditionalChargesDTO updated = additionalChargesService.updateCharge(id, dto);
-        // [WebSocket] Message ပို့မည်
         messagingTemplate.convertAndSend(CHARGE_TOPIC, "CHARGE_UPDATED");
         return ResponseEntity.ok(updated);
     }
@@ -61,7 +56,7 @@ public class AdditionalChargesController {
     @PreAuthorize("hasAnyRole('ADMIN', 'AdMINISTRATOR')")
     public ResponseEntity<Void> deleteCharge(@PathVariable Integer id) {
         additionalChargesService.deleteCharge(id);
-        // [WebSocket] Message ပို့မည်
+
         messagingTemplate.convertAndSend(CHARGE_TOPIC, "CHARGE_DELETED");
         return ResponseEntity.noContent().build();
     }
@@ -70,7 +65,6 @@ public class AdditionalChargesController {
     @PreAuthorize("hasAnyRole('ADMIN', 'AdMINISTRATOR')")
     public ResponseEntity<AdditionalChargesDTO> toggleChargeStatus(@PathVariable Integer id) {
         AdditionalChargesDTO updated = additionalChargesService.toggleChargeStatus(id);
-        // [WebSocket] Message ပို့မည်
         messagingTemplate.convertAndSend(CHARGE_TOPIC, "CHARGE_STATUS_TOGGLED");
         return ResponseEntity.ok(updated);
     }

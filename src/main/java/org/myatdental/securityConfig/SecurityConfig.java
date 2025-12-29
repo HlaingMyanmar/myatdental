@@ -90,7 +90,7 @@ public CorsConfigurationSource corsConfigurationSource() {
     configuration.setAllowedOrigins(List.of(
             "http://localhost:3000",
             "http://127.0.0.1:3000",
-            "http://192.168.100.60:3000" // သင့်ရဲ့ UI IP
+            "http://192.168.100.64:3000" // သင့်ရဲ့ UI IP
     ));
 
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));

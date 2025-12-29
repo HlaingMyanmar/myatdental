@@ -64,15 +64,13 @@ public class AuthController {
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(true) // Production ဆိုရင် true ထားပါ (HTTPS လိုအပ်တယ်)
+                .secure(true)
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60) // 7 days
                 .sameSite("Lax")
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-
-      //  return ResponseEntity.ok(new AuthResponse(accessToken, userDetails.getUsername()));
 
         return ResponseEntity.ok(new AuthResponse(
                 accessToken,

@@ -5,9 +5,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.myatdental.patientoption.gender.Gender;
+import org.myatdental.vitaloption.patient.model.PatientVital;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(
@@ -54,6 +57,9 @@ public class Patient {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<PatientVital> patientVitals = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {
