@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.myatdental.patientoption.gender.Gender;
+import org.myatdental.patientplanoption.model.PatientPlan;
 import org.myatdental.vitaloption.patient.model.PatientVital;
 
 import java.time.LocalDate;
@@ -60,6 +61,9 @@ public class Patient {
 
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<PatientVital> patientVitals = new HashSet<>();
+
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<PatientPlan> patientPlans = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {

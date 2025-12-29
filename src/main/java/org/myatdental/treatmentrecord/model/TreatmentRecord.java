@@ -3,10 +3,13 @@ package org.myatdental.treatmentrecord.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.myatdental.appointmentoptions.model.Appointment;
+import org.myatdental.inoviceoptions.item.model.InvoiceItem;
 import org.myatdental.treatmentoptions.model.Treatments;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "treatment_records")
@@ -51,6 +54,9 @@ public class TreatmentRecord {
 
     @Column(name = "performed_at")
     private LocalDateTime performedAt;
+
+    @OneToMany(mappedBy = "treatmentRecord", fetch = FetchType.LAZY)
+    private Set<InvoiceItem> invoiceItems = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {

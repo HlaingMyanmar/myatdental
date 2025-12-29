@@ -270,4 +270,10 @@ public class AppointmentService {
         }
         return convertToDTO(appointmentRepository.save(appt));
     }
+    @Transactional(readOnly = true)
+    public List<AppointmentDTO> getAppointmentsByStatus(AppointmentStatus status) {
+        return appointmentRepository.findByStatus(status).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
 }

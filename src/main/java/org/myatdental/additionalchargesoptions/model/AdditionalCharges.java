@@ -4,8 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.myatdental.inoviceoptions.invoiceadditioanal.model.InvoiceAdditionalCharge;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "additional_charges")
@@ -31,4 +34,7 @@ public class AdditionalCharges {
 
     @Column(name = "is_active")
     private Boolean isActive = true;
+
+    @OneToMany(mappedBy = "charge", fetch = FetchType.LAZY)
+    private List<InvoiceAdditionalCharge> invoiceAdditionalCharges = new ArrayList<>();
 }

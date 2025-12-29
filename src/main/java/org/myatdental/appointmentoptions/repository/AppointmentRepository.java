@@ -49,5 +49,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
 
     List<Appointment> findByDentist_Id(Long dentistId);
 
+    List<Appointment> findByStatus(AppointmentStatus status);
+
     List<Appointment> findByDentist_IdAndStatusInOrderByTokenNumberAsc(Long dentistId, List<AppointmentStatus> statuses);
 }

@@ -3,6 +3,7 @@ package org.myatdental.appointmentoptions.controller;
 import lombok.RequiredArgsConstructor;
 import org.myatdental.appointmentoptions.dto.AppointmentDTO;
 import org.myatdental.appointmentoptions.service.AppointmentService;
+import org.myatdental.appointmentoptions.status.AppointmentStatus;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -90,5 +91,11 @@ public class AppointmentController {
         AppointmentDTO updated = appointmentService.changeRoom(id, roomId);
         messagingTemplate.convertAndSend(APPOINTMENT_TOPIC, "ROOM_CHANGED");
         return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/completed")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR', 'DOCTOR', 'RECEPTIONIST')")
+    public ResponseEntity<List<AppointmentDTO>> getCompletedAppointments() {
+        return ResponseEntity.ok(appointmentService.getAppointmentsByStatus(AppointmentStatus.Completed));
     }
 }
