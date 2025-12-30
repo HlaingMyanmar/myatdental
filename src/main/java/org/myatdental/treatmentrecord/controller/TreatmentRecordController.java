@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.myatdental.treatmentrecord.dto.TreatmentRecordDTO;
 import org.myatdental.treatmentrecord.service.TreatmentRecordService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -15,6 +16,11 @@ import java.util.List;
 public class TreatmentRecordController {
 
     private final TreatmentRecordService treatmentRecordService;
+
+    private final SimpMessagingTemplate messagingTemplate;
+
+    private static final String TREATMENT_RECORD_TOPIC = "/topic/TREATMENT_RECORD";
+
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR', 'DOCTOR')")
@@ -31,12 +37,14 @@ public class TreatmentRecordController {
 //    @PostMapping
 //    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR', 'DOCTOR')")
 //    public ResponseEntity<TreatmentRecordDTO> createRecord(@Valid @RequestBody TreatmentRecordDTO dto) {
+//     messagingTemplate.convertAndSend(TREATMENT_RECORD_TOPIC,"TREATMENT_RECORD_INSERT");
 //        return ResponseEntity.ok(treatmentRecordService.createRecord(dto));
 //    }
 
     @PostMapping("/bulk")
     @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR', 'DOCTOR')")
     public ResponseEntity<List<TreatmentRecordDTO>> createBulkRecords(@Valid @RequestBody TreatmentRecordService.BulkTreatmentRequestDTO dto) {
+       messagingTemplate.convertAndSend(TREATMENT_RECORD_TOPIC,"TREATMENT_RECORD_INSERT_BULK");
         return ResponseEntity.ok(treatmentRecordService.createBulkRecords(dto));
     }
 
@@ -45,12 +53,14 @@ public class TreatmentRecordController {
     public ResponseEntity<TreatmentRecordDTO> updateRecord(
             @PathVariable Long id,
             @Valid @RequestBody TreatmentRecordDTO dto) {
+        messagingTemplate.convertAndSend(TREATMENT_RECORD_TOPIC,"TREATMENT_RECORD_UPDATE");
         return ResponseEntity.ok(treatmentRecordService.updateRecord(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR')") // ဖျက်ခြင်းကို Admin သာ လုပ်နိုင်ရန်
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR')")
     public ResponseEntity<Void> deleteRecord(@PathVariable Long id) {
+        messagingTemplate.convertAndSend(TREATMENT_RECORD_TOPIC,"TREATMENT_RECORD_DELETE");
         treatmentRecordService.deleteRecord(id);
         return ResponseEntity.noContent().build();
     }

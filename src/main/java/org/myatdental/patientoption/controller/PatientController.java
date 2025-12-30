@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.myatdental.patientoption.dto.PatientDTO;
 import org.myatdental.patientoption.service.PatientService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,6 +16,10 @@ import java.util.List;
 public class PatientController {
 
     private final PatientService patientService;
+
+    private final SimpMessagingTemplate messagingTemplate;
+
+    private static final String PATIENT_TOPIC = "/topic/patients";
 
     @GetMapping
     public ResponseEntity<List<PatientDTO>> getAllPatients() {
@@ -30,6 +35,7 @@ public class PatientController {
     public ResponseEntity<PatientDTO> createPatient(
             @Valid @RequestBody PatientDTO dto
     ) {
+        messagingTemplate.convertAndSend(PATIENT_TOPIC,"PATIENT_CREATED");
         return ResponseEntity.ok(patientService.createPatient(dto));
     }
 
@@ -38,11 +44,13 @@ public class PatientController {
             @PathVariable Integer id,
             @RequestBody PatientDTO dto
     ) {
+        messagingTemplate.convertAndSend(PATIENT_TOPIC,"PATIENT_UPDATED");
         return ResponseEntity.ok(patientService.updatePatient(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePatient(@PathVariable Integer id) {
+        messagingTemplate.convertAndSend(PATIENT_TOPIC,"PATIENT_DELETED");
         patientService.deletePatient(id);
         return ResponseEntity.noContent().build();
     }

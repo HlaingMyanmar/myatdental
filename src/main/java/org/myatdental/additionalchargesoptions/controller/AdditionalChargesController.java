@@ -6,8 +6,8 @@ import org.myatdental.additionalchargesoptions.dto.AdditionalChargesDTO;
 import org.myatdental.additionalchargesoptions.service.AdditionalChargesService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessagingTemplate; // WebSocket အတွက်
-import org.springframework.security.access.prepost.PreAuthorize; // Security အတွက်
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

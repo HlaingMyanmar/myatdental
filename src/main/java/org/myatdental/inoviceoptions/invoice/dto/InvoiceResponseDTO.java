@@ -29,4 +29,5 @@ public class InvoiceResponseDTO {
     private BigDecimal balanceDue;
     private Invoice.InvoiceStatus status;
     private LocalDateTime createdAt;
+    private String cancellationReason;
 }

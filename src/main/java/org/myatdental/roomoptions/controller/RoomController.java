@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.myatdental.roomoptions.service.RoomService;
 import org.myatdental.roomoptions.dto.RoomDTO;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +15,10 @@ import java.util.List;
 public class RoomController {
 
     private final RoomService roomService;
+
+    private final SimpMessagingTemplate messagingTemplate;
+
+    private static final String ROOM_TOPIC = "/topic/room";
 
     @GetMapping
     public ResponseEntity<List<RoomDTO>> getAllRooms() {
@@ -27,23 +32,27 @@ public class RoomController {
 
     @PostMapping
     public ResponseEntity<RoomDTO> createRoom(@Valid @RequestBody RoomDTO dto) {
+        messagingTemplate.convertAndSend(ROOM_TOPIC,"ROOM_CREATED");
         return ResponseEntity.ok(roomService.createRoom(dto));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<RoomDTO> updateRoom(@PathVariable Integer id,
                                               @RequestBody RoomDTO dto) {
+        messagingTemplate.convertAndSend(ROOM_TOPIC,"ROOM_UPDATED");
         return ResponseEntity.ok(roomService.updateRoom(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRoom(@PathVariable Integer id) {
+        messagingTemplate.convertAndSend(ROOM_TOPIC,"ROOM_DELETE");
         roomService.deleteRoom(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/toggle-status")
     public ResponseEntity<RoomDTO> toggleRoomStatus(@PathVariable Integer id) {
+        messagingTemplate.convertAndSend(ROOM_TOPIC,"ROOM_STATUS");
         return ResponseEntity.ok(roomService.toggleRoomStatus(id));
     }
 }

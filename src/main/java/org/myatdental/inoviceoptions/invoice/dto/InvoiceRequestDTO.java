@@ -43,4 +43,5 @@ public class InvoiceRequestDTO {
     private BigDecimal amountPaid;
 
     private Invoice.InvoiceStatus status;
+
 }

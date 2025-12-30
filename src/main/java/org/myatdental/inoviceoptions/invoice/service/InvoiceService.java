@@ -93,8 +93,6 @@ public class InvoiceService {
         invoice.setDiscountAmount(requestDTO.getDiscountAmount() != null ? requestDTO.getDiscountAmount() : BigDecimal.ZERO);
         invoice.setAmountPaid(requestDTO.getAmountPaid() != null ? requestDTO.getAmountPaid() : BigDecimal.ZERO);
         invoice.setStatus(requestDTO.getStatus() != null ? requestDTO.getStatus() : Invoice.InvoiceStatus.PENDING);
-        // createdAt is set by @PrePersist
-
         Invoice savedInvoice = invoiceRepository.save(invoice);
         return convertToDto(savedInvoice);
     }
@@ -152,6 +150,26 @@ public class InvoiceService {
 
         Invoice updatedInvoice = invoiceRepository.save(existingInvoice);
         return convertToDto(updatedInvoice);
+    }
+    @Transactional
+    public InvoiceResponseDTO cancelInvoice(Integer invoiceId,String cancellationReason) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found with id: " + invoiceId));
+
+        if (invoice.getStatus() == Invoice.InvoiceStatus.CANCELED) {
+            throw new RuntimeException("ဤပြေစာသည် ဖျက်သိမ်းပြီးသား ဖြစ်ပါသည်။");
+        }
+        if (invoice.getStatus() == Invoice.InvoiceStatus.PAID) {
+            throw new RuntimeException("ငွေအပြည့်ရှင်းပြီးသား ပြေစာကို ဖျက်သိမ်း၍မရပါ။");
+        }
+        if (cancellationReason == null || cancellationReason.trim().isEmpty()) {
+            throw new IllegalArgumentException("ဖျက်သိမ်းရခြင်းအကြောင်းအရင်း မဖြစ်မနေလိုအပ်ပါသည်။");
+        }
+
+        invoice.setStatus(Invoice.InvoiceStatus.CANCELED);
+        invoice.setCancellationReason(cancellationReason);
+        Invoice cancelledInvoice = invoiceRepository.save(invoice);
+        return convertToResponseDTO(cancelledInvoice);
     }
 
     @Transactional

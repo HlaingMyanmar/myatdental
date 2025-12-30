@@ -1,6 +1,7 @@
 package org.myatdental.inoviceoptions.invoice.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -66,6 +67,10 @@ public class Invoice {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+
+    @Column(name = "cancellation_reason", columnDefinition = "TEXT")
+    private String cancellationReason;
 
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<InvoiceItem> invoiceItems = new ArrayList<>();
